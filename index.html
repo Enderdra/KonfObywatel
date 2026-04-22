@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#003366">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KonfObywatel - Karta Stałego Konfidenta</title>
@@ -272,6 +275,12 @@
     </div>
 
     <script>
+        // Rejestracja Service Workera (wymagane do instalacji na telefonie)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js');
+            });
+        }
         // --- Obsługa dodawania zdjęcia ---
         const photoInput = document.getElementById('id-photo-input');
         const photoImage = document.getElementById('display-photo');
