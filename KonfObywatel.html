@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KonfObywatel - Karta Stałego Konfidenta</title>
+    <style>
+        :root {
+            --primary-bg: #f0f4f8;
+            --card-bg: linear-gradient(135deg, #e0eaf5 0%, #c1d5e0 100%);
+            --text-dark: #1a1a1a;
+            --text-blue: #003366;
+            --police-blue: #002244;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Kontener udający ekran smartfona */
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--primary-bg);
+            height: 100vh;
+            max-height: 850px;
+            position: relative;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Pasek nawigacji górnej */
+        .header {
+            background-color: var(--text-blue);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .content {
+            padding: 20px;
+            flex-grow: 1;
+        }
+
+        /* Stylizacja samej Karty */
+        .id-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid #a8c0d8;
+        }
+
+        .id-title {
+            text-align: center;
+            font-weight: 900;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .id-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* Kontener na zdjęcie, teraz jest interaktywnym labelem */
+        .photo-box {
+            background-color: white;
+            height: 140px;
+            border: 2px dashed #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #999;
+            font-size: 0.8rem;
+            text-align: center;
+            overflow: hidden; /* Aby zdjęcie nie wychodziło poza ramkę */
+            position: relative;
+            cursor: pointer; /* Zmienia kursor na rączkę, sugerując kliknięcie */
+        }
+
+        /* Stylizacja samego zdjęcia po dodaniu */
+        .photo-box img {
+            display: none; /* Ukryj element img, dopóki nie ma zdjęcia */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Zdjęcie wypełnia kontener bez zniekształceń */
+        }
+
+        /* Tekst zastępczy (schowa się po dodaniu zdjęcia) */
+        .photo-placeholder {
+            padding: 10px;
+        }
+
+        .symbols-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+        }
+
+        .symbol {
+            font-size: 3rem;
+        }
+
+        .field {
+            margin-top: 10px;
+        }
+
+        .field-label {
+            font-size: 0.75rem;
+            font-weight: bold;
+            font-style: italic;
+        }
+
+        .field-value {
+            background: white;
+            padding: 5px;
+            font-weight: bold;
+            min-height: 28px;
+            margin-top: 3px;
+        }
+
+        .field-value-text {
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-top: 3px;
+        }
+
+        .police-footer {
+            text-align: center;
+            font-weight: 900;
+            font-size: 1.8rem;
+            letter-spacing: 5px;
+            margin-top: 15px;
+            color: var(--police-blue);
+        }
+
+        /* Menu zgłaszania */
+        .menu-title {
+            font-size: 1.2rem;
+            color: var(--text-blue);
+            margin-bottom: 15px;
+            font-weight: bold;
+            border-bottom: 2px solid var(--text-blue);
+            padding-bottom: 5px;
+        }
+
+        .action-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #333;
+            text-align: left;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: background-color 0.2s;
+        }
+
+        .action-btn:hover {
+            background-color: #eef5fa;
+            border-color: var(--text-blue);
+        }
+
+        .action-btn span {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="header">
+            KonfObywatel 2.0
+        </div>
+
+        <div class="content">
+            <div class="id-card">
+                <div class="id-title">Karta Stałego Konfidenta</div>
+                
+                <div class="id-grid">
+                    <div>
+                        <div class="field">
+                            <label for="id-photo-input" class="photo-box">
+                                <input type="file" id="id-photo-input" accept="image/*" style="display: none;">
+                                <img id="display-photo" src="" alt="twoje zdjęcie">
+                                <div id="photo-placeholder" class="photo-placeholder">
+                                    Kliknij<br>aby dodać zdjęcie
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="field">
+                            <div class="field-label">pseudonim</div>
+                            <div class="field-value" contenteditable="true">Sygnalista</div>
+                        </div>
+                        <div class="field">
+                            <div class="field-label">imie i nazwisko</div>
+                            <div class="field-value" contenteditable="true">Janusz Nosacz</div>
+                        </div>
+                        <div class="field">
+                            <div class="field-label">pakiet</div>
+                            <div class="field-value-text">PLATINUM</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="symbols-box">
+                            <div class="symbol">🦅</div> <div class="symbol">👮‍♂️</div> </div>
+                        <div class="field" style="text-align: right;">
+                            <div class="field-label">ważna do:</div>
+                            <div class="field-value-text">Dożywocie</div>
+                        </div>
+                        <div class="field" style="text-align: right; margin-top: 20px;">
+                            <div class="field-label">Nadane z art.</div>
+                            <div class="field-value-text">ART.60 PAR.1</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="police-footer">P O L I C J A</div>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-title">Menu Zgłaszania</div>
+                
+                <button class="action-btn" onclick="zglos('Sąsiad pali śmieciami')">
+                    <span>🔥</span> Zgłoś dym z komina sąsiada
+                </button>
+                <button class="action-btn" onclick="zglos('Źle zaparkowane auto')">
+                    <span>🚗</span> Zgłoś parkowanie na trawniku
+                </button>
+                <button class="action-btn" onclick="zglos('Hałas po 22:00')">
+                    <span>📢</span> Zgłoś zakłócanie ciszy nocnej
+                </button>
+                <button class="action-btn" onclick="zglos('Pies bez kagańca')">
+                    <span>🐕</span> Zgłoś psa bez smyczy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Obsługa dodawania zdjęcia ---
+        const photoInput = document.getElementById('id-photo-input');
+        const photoImage = document.getElementById('display-photo');
+        const photoPlaceholder = document.getElementById('photo-placeholder');
+
+        // Nasłuchuj na zmianę wartości w polu wyboru pliku
+        photoInput.addEventListener('change', function(event) {
+            // Pobierz wybrany plik
+            const file = event.target.files[0];
+
+            if (file) {
+                // Użyj FileReader do przeczytania pliku jako Data URL
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Po wczytaniu ustaw wynik jako źródło dla elementu img
+                    photoImage.src = e.target.result;
+                    photoImage.style.display = 'block'; // Pokaż zdjęcie
+                    photoPlaceholder.style.display = 'none'; // Ukryj tekst zastępczy
+                }
+                reader.readAsDataURL(file); // Rozpocznij wczytywanie pliku
+            }
+        });
+
+        // --- Obsługa donosów ---
+        function zglos(kategoria) {
+            alert("Obywatelski obowiązek spełniony!\n\nKategoria: " + kategoria + "\n\nPrzyznano +10 punktów do statusu PLATINUM.");
+        }
+    </script>
+
+</body>
+</html>
