@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twoja Karta</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <a href="index.html" class="back-btn">‹ Wróć</a>
+            <span>Karta Konfidenta</span>
+            <span style="width:50px"></span>
+        </div>
+        <div class="content">
+            <div id="capture-area" class="karta-wrapper">
+                <label for="img-input" class="karta-photo">
+                    <input type="file" id="img-input" hidden accept="image/*">
+                    <img id="preview" src="" style="display:none">
+                    <span id="label-text" style="font-size:10px; color:#aaa">DODAJ FOTO</span>
+                </label>
+                <input type="text" id="in-pseudo" class="karta-input" placeholder="PSEUDONIM">
+                <input type="text" id="in-name" class="karta-input" placeholder="IMIĘ I NAZWISKO">
+            </div>
+
+            <button class="btn-primary" onclick="downloadID()">Pobierz do galerii (JPG)</button>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('img-input');
+        input.onchange = e => {
+            const [file] = input.files;
+            if (file) {
+                document.getElementById('preview').src = URL.createObjectURL(file);
+                document.getElementById('preview').style.display = 'block';
+                document.getElementById('label-text').style.display = 'none';
+            }
+        }
+
+        function downloadID() {
+            html2canvas(document.getElementById('capture-area')).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'karta-konfidenta.jpg';
+                link.href = canvas.toDataURL('image/jpeg', 0.9);
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>
