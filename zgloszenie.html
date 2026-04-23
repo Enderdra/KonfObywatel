@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zgłoszenie</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <a href="index.html" class="back-btn">‹ Anuluj</a>
+            <span>Nowe Zgłoszenie</span>
+            <span style="width:50px"></span>
+        </div>
+        <div class="content">
+            <div class="section-title">Szczegóły donosu</div>
+            
+            <div class="form-group">
+                <label>Typ przewinienia</label>
+                <select id="typ">
+                    <option>Pylenie z komina</option>
+                    <option>Parkowanie na trawniku</option>
+                    <option>Pies bez kagańca</option>
+                    <option>Głośna muzyka po 22:00</option>
+                    <option>Inne (podejrzane zachowanie)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Lokalizacja (np. numer mieszkania)</label>
+                <input type="text" id="loc" placeholder="Gdzie to się dzieje?">
+            </div>
+
+            <div class="form-group">
+                <label>Opis szczegółowy</label>
+                <textarea id="desc" rows="4" placeholder="Opisz dokładnie co widziałeś..."></textarea>
+            </div>
+
+            <button class="btn-primary" onclick="send()">Wyślij zgłoszenie</button>
+            <p style="font-size:11px; color:#888; text-align:center; margin-top:10px;">
+                Zgłoszenie zostanie wysłane z autoryzacją Twojej karty PLATINUM.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function send() {
+            const typ = document.getElementById('typ').value;
+            alert("Dziękujemy za obywatelską postawę!\n\nZgłoszenie: " + typ + " zostało przekazane do odpowiednich służb.\n\nStatus: W TOKU.");
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
