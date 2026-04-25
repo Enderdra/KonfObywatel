@@ -5,6 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zgłoszenie</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Dodatkowy styl dla przycisku dodawania zdjęcia */
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+            background: #f8f8f8;
+            border: 2px dashed #c7c7cc;
+            border-radius: 8px;
+            text-align: center;
+            padding: 20px;
+            cursor: pointer;
+            margin-top: 5px;
+            transition: background 0.2s;
+        }
+        .file-input-wrapper:hover {
+            background: #f2f2f7;
+        }
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-name {
+            display: block;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-blue);
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -20,21 +56,39 @@
                 <label>Typ przewinienia</label>
                 <select id="typ">
                     <option>Pylenie z komina</option>
-                    <option>Parkowanie na trawniku</option>
-                    <option>Pies bez kagańca</option>
-                    <option>Głośna muzyka po 22:00</option>
+                    <option>Granie w siatkę na boisku do piłki nożnej</option>
+                    <option>Drzewa zahaczające o druty elektryczne</option>
+                    <option>Zasłonięta tablica rejestracyjna</option>
+                    <option>Przechodzenie przez ulicę na czerwonym świetle</option>
+                    <option>Jazda bez biletu komunikacją miejską</option>
+                    <option>Zakłócanie ciszy nocnej</option>
+                    <option>Wykraczanie za pole do parkowania</option>
+                    <option>Spożywanie alkoholu w miejscu publicznym</option>
+                    <option>Jazda po chodniku rowerem</option>
+                    <option>Malowanie graffiti</option>
+                    <option>Palenie w miejscu gdzie jest to zakazane</option>
+                    <option>Pies bez kagańca / smyczy</option>
                     <option>Inne (podejrzane zachowanie)</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label>Lokalizacja (np. numer mieszkania)</label>
+                <label>Lokalizacja (np. ulica, numer bloku)</label>
                 <input type="text" id="loc" placeholder="Gdzie to się dzieje?">
             </div>
 
             <div class="form-group">
                 <label>Opis szczegółowy</label>
-                <textarea id="desc" rows="4" placeholder="Opisz dokładnie co widziałeś..."></textarea>
+                <textarea id="desc" rows="3" placeholder="Opisz dokładnie co widziałeś..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Dowód rzeczowy (Zdjęcie)</label>
+                <div class="file-input-wrapper">
+                    <span>📸 Kliknij, aby dodać zdjęcie z ukrycia</span>
+                    <input type="file" id="dowod-foto" accept="image/*" onchange="pokazNazwePliku()">
+                </div>
+                <span id="nazwa-pliku" class="file-name"></span> 
             </div>
 
             <button class="btn-primary" onclick="send()">Wyślij zgłoszenie</button>
@@ -45,9 +99,30 @@
     </div>
 
     <script>
+        // Funkcja wyświetlająca informację o dodanym zdjęciu
+        function pokazNazwePliku() {
+            const input = document.getElementById('dowod-foto');
+            const nazwaSpan = document.getElementById('nazwa-pliku');
+            if (input.files && input.files.length > 0) {
+                nazwaSpan.innerText = "✓ Załączono dowód: " + input.files[0].name;
+            } else {
+                nazwaSpan.innerText = "";
+            }
+        }
+
+        // Funkcja wysyłania (pokazuje odpowiedni komunikat)
         function send() {
             const typ = document.getElementById('typ').value;
-            alert("Dziękujemy za obywatelską postawę!\n\nZgłoszenie: " + typ + " zostało przekazane do odpowiednich służb.\n\nStatus: W TOKU.");
+            const inputFoto = document.getElementById('dowod-foto');
+            
+            // Sprawdza, czy użytkownik dodał zdjęcie
+            const infoOZdjęciu = (inputFoto.files && inputFoto.files.length > 0) 
+                ? "\nDowód zdjęciowy: ZAŁĄCZONO" 
+                : "";
+
+            alert("Dziękujemy za obywatelską postawę!\n\nZgłoszenie: " + typ + infoOZdjęciu + "\n\nZostało przekazane do odpowiednich służb. Status: PRIORYTET.");
+            
+            // Wraca do głównego menu po kliknięciu OK
             window.location.href = 'index.html';
         }
     </script>
