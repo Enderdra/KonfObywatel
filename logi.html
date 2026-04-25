@@ -3,30 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Publiczny Rejestr</title>
+    <title>Tajny Rejestr</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .log-card { background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 4px solid #d32f2f; }
         .log-date { font-size: 11px; color: #888; }
         .log-type { font-weight: bold; font-size: 14px; margin: 4px 0; }
+        .password-container { background: white; border-radius: 12px; padding: 20px; text-align: center; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .password-input { width: 100%; padding: 12px; margin: 15px 0; border: 2px solid #ccc; border-radius: 8px; font-size: 16px; text-align: center; outline: none; }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <div class="header">
-            <a href="index.html" class="back-btn">‹ Wróć</a>
-            <span>Rejestr Zgłoszeń</span>
-            <span style="width:50px"></span>
-        </div>
+        <div class="header"><a href="index.html" class="back-btn">‹ Wróć</a><span>Tajny Rejestr</span><span style="width:50px"></span></div>
         <div class="content">
-            <div id="lista-logow">Ładowanie danych z chmury...</div>
-            <button class="btn-primary" onclick="pobierzPlik()" style="background:#34c759; margin-top:20px">Pobierz logi (.txt)</button>
+            <div id="ekran-logowania" class="password-container">
+                <h3 style="color: #d32f2f;">Dostęp Zastrzeżony 🛑</h3>
+                <p style="font-size: 12px; color: #666;">Wprowadź hasło oficera prowadzącego.</p>
+                <input type="password" id="haslo-input" class="password-input" placeholder="Hasło">
+                <button class="btn-primary" onclick="zaloguj()">Odblokuj dostęp</button>
+            </div>
+            <div id="ekran-logow" style="display: none;">
+                <div id="lista-logow">Ładowanie...</div>
+                <button class="btn-primary" onclick="pobierzPlik()" style="background:#34c759; margin-top:20px">Pobierz logi (.txt)</button>
+            </div>
         </div>
     </div>
-
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I",
@@ -41,45 +45,31 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         let allLogs = [];
-
-        db.ref('logi').on('value', snap => {
-            const data = snap.val();
-            const container = document.getElementById('lista-logow');
-            container.innerHTML = '';
-            allLogs = [];
-
-            if(!data) {
-                container.innerHTML = "Brak zgłoszeń w chmurze.";
-                return;
-            }
-
-            for(let id in data) {
-                allLogs.push(data[id]);
-                const item = data[id];
-                container.innerHTML = `
-                    <div class="log-card">
-                        <div class="log-date">${item.data}</div>
-                        <div class="log-type">${item.typ}</div>
-                        <div style="font-size:12px">📍 ${item.loc}</div>
-                        <div style="font-size:12px; color:#444">📝 ${item.desc}</div>
-                        <div style="font-size:10px; color:green; font-weight:bold; margin-top:5px">✓ ANONIMOWE</div>
-                    </div>
-                ` + container.innerHTML;
-            }
-        });
-
-        function pobierzPlik() {
-            let txt = "GLOBALNY REJESTR KONFOBYWATEL\n\n";
-            allLogs.slice().reverse().forEach(l => {
-                txt += `${l.data} | ${l.typ} | ${l.loc}\nOpis: ${l.desc}\nFoto: ${l.foto}\n----------------\n`;
+        function zaloguj() {
+            if (document.getElementById('haslo-input').value === "policja123") {
+                document.getElementById('ekran-logowania').style.display = 'none';
+                document.getElementById('ekran-logow').style.display = 'block';
+                uruchomBaze();
+            } else { alert("Błędne hasło!"); }
+        }
+        function uruchomBaze() {
+            db.ref('logi').on('value', snap => {
+                const data = snap.val();
+                const container = document.getElementById('lista-logow');
+                container.innerHTML = ''; allLogs = [];
+                if(!data) { container.innerHTML = "Brak danych."; return; }
+                for(let id in data) {
+                    allLogs.push(data[id]);
+                    container.innerHTML = `<div class="log-card"><div class="log-date">${data[id].data}</div><div class="log-type">${data[id].typ}</div><div style="font-size:12px">📍 ${data[id].loc}</div><div style="font-size:12px; color:#444">📝 ${data[id].desc}</div></div>` + container.innerHTML;
+                }
             });
+        }
+        function pobierzPlik() {
+            let txt = "TAJNY REJESTR KONFOBYWATEL\n\n";
+            allLogs.slice().reverse().forEach(l => txt += `${l.data} | ${l.typ} | ${l.loc}\nOpis: ${l.desc}\n---\n`);
             const blob = new Blob([txt], {type: 'text/plain'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'logi_konfobywatel.txt';
-            a.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'logi.txt'; a.click();
         }
     </script>
 </body>
 </html>
-
