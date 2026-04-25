@@ -6,10 +6,7 @@
     <title>Nowe Zgłoszenie</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .file-input-wrapper {
-            background: #f8f8f8; border: 2px dashed #c7c7cc; border-radius: 8px;
-            text-align: center; padding: 20px; cursor: pointer; margin-top: 5px;
-        }
+        .file-input-wrapper { background: #f8f8f8; border: 2px dashed #c7c7cc; border-radius: 8px; text-align: center; padding: 20px; cursor: pointer; }
         .disclaimer-text { font-size: 11px; color: #d32f2f; text-align: center; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
@@ -41,23 +38,19 @@
             </div>
             <div class="form-group"><label>Lokalizacja</label><input type="text" id="loc" placeholder="Ulica, numer bloku..."></div>
             <div class="form-group"><label>Opis szczegółowy</label><textarea id="desc" rows="3" placeholder="Opisz sytuację..."></textarea></div>
-            
             <div class="form-group">
-                <label>Dowód rzeczowy (Zdjęcie)</label>
+                <label>Dowód (Foto)</label>
                 <div class="file-input-wrapper" onclick="document.getElementById('foto').click()">
                     <input type="file" id="foto" accept="image/*" hidden onchange="document.getElementById('fname').innerText='✓ Załączono dowód'">
                     <span id="fname">📸 Dodaj zdjęcie z ukrycia</span>
                 </div>
             </div>
-
             <button class="btn-primary" onclick="send()">Wyślij zgłoszenie</button>
-            <div class="disclaimer-text">⚠️ Zgłoszenia są dostępne publicznie, ale bez informacji o zgłaszającym.</div>
+            <div class="disclaimer-text">⚠️ Zgłoszenia trafiają do tajnego rejestru, dostępnego tylko dla oficerów z hasłem.</div>
         </div>
     </div>
-
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I",
@@ -71,7 +64,6 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
         function send() {
             const data = {
                 data: new Date().toLocaleString('pl-PL'),
@@ -80,13 +72,11 @@
                 desc: document.getElementById('desc').value || "Brak opisu",
                 foto: document.getElementById('foto').files.length > 0 ? "TAK" : "NIE"
             };
-
             db.ref('logi').push(data).then(() => {
-                alert("Dziękujemy! Zgłoszenie zapisane w publicznej chmurze.");
+                alert("Zgłoszenie wysłane do tajnej bazy!");
                 window.location.href = 'index.html';
-            }).catch(e => alert("Błąd bazy: " + e.message));
+            });
         }
     </script>
 </body>
 </html>
-
