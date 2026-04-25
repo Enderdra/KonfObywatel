@@ -3,43 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zgłoszenie</title>
+    <title>Nowe Zgłoszenie</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Dodatkowy styl dla przycisku dodawania zdjęcia */
         .file-input-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            width: 100%;
-            background: #f8f8f8;
-            border: 2px dashed #c7c7cc;
-            border-radius: 8px;
-            text-align: center;
-            padding: 20px;
-            cursor: pointer;
-            margin-top: 5px;
-            transition: background 0.2s;
+            background: #f8f8f8; border: 2px dashed #c7c7cc; border-radius: 8px;
+            text-align: center; padding: 20px; cursor: pointer; margin-top: 5px;
         }
-        .file-input-wrapper:hover {
-            background: #f2f2f7;
-        }
-        .file-input-wrapper input[type=file] {
-            font-size: 100px;
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-            cursor: pointer;
-        }
-        .file-name {
-            display: block;
-            margin-top: 8px;
-            font-size: 12px;
-            color: var(--text-blue);
-            font-weight: bold;
-            text-align: center;
-        }
+        .disclaimer-text { font-size: 11px; color: #d32f2f; text-align: center; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -51,11 +22,9 @@
         </div>
         <div class="content">
             <div class="section-title">Szczegóły donosu</div>
-            
             <div class="form-group">
                 <label>Typ przewinienia</label>
                 <select id="typ">
-                    <option>Pylenie z komina</option>
                     <option>Granie w siatkę na boisku do piłki nożnej</option>
                     <option>Drzewa zahaczające o druty elektryczne</option>
                     <option>Zasłonięta tablica rejestracyjna</option>
@@ -66,65 +35,58 @@
                     <option>Spożywanie alkoholu w miejscu publicznym</option>
                     <option>Jazda po chodniku rowerem</option>
                     <option>Malowanie graffiti</option>
-                    <option>Palenie w miejscu gdzie jest to zakazane</option>
-                    <option>Pies bez kagańca / smyczy</option>
-                    <option>Inne (podejrzane zachowanie)</option>
+                    <option>Palenie w miejscu zakazanym</option>
+                    <option>Pylenie z komina / Inne</option>
                 </select>
             </div>
-
-            <div class="form-group">
-                <label>Lokalizacja (np. ulica, numer bloku)</label>
-                <input type="text" id="loc" placeholder="Gdzie to się dzieje?">
-            </div>
-
-            <div class="form-group">
-                <label>Opis szczegółowy</label>
-                <textarea id="desc" rows="3" placeholder="Opisz dokładnie co widziałeś..."></textarea>
-            </div>
-
+            <div class="form-group"><label>Lokalizacja</label><input type="text" id="loc" placeholder="Ulica, numer bloku..."></div>
+            <div class="form-group"><label>Opis szczegółowy</label><textarea id="desc" rows="3" placeholder="Opisz sytuację..."></textarea></div>
+            
             <div class="form-group">
                 <label>Dowód rzeczowy (Zdjęcie)</label>
-                <div class="file-input-wrapper">
-                    <span>📸 Kliknij, aby dodać zdjęcie z ukrycia</span>
-                    <input type="file" id="dowod-foto" accept="image/*" onchange="pokazNazwePliku()">
+                <div class="file-input-wrapper" onclick="document.getElementById('foto').click()">
+                    <input type="file" id="foto" accept="image/*" hidden onchange="document.getElementById('fname').innerText='✓ Załączono dowód'">
+                    <span id="fname">📸 Dodaj zdjęcie z ukrycia</span>
                 </div>
-                <span id="nazwa-pliku" class="file-name"></span> 
             </div>
 
             <button class="btn-primary" onclick="send()">Wyślij zgłoszenie</button>
-            <p style="font-size:11px; color:#888; text-align:center; margin-top:10px;">
-                Zgłoszenie zostanie wysłane z autoryzacją Twojej karty PLATINUM.
-            </p>
+            <div class="disclaimer-text">⚠️ Zgłoszenia są dostępne publicznie, ale bez informacji o zgłaszającym.</div>
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <script>
-        // Funkcja wyświetlająca informację o dodanym zdjęciu
-        function pokazNazwePliku() {
-            const input = document.getElementById('dowod-foto');
-            const nazwaSpan = document.getElementById('nazwa-pliku');
-            if (input.files && input.files.length > 0) {
-                nazwaSpan.innerText = "✓ Załączono dowód: " + input.files[0].name;
-            } else {
-                nazwaSpan.innerText = "";
-            }
-        }
+        const firebaseConfig = {
+            apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I",
+            authDomain: "konfobywatel-331d6.firebaseapp.com",
+            databaseURL: "https://konfobywatel-331d6-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "konfobywatel-331d6",
+            storageBucket: "konfobywatel-331d6.firebasestorage.app",
+            messagingSenderId: "695478312817",
+            appId: "1:695478312817:web:41ef61675267dd936da0d0",
+            measurementId: "G-HE1H1FKJMR"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        // Funkcja wysyłania (pokazuje odpowiedni komunikat)
         function send() {
-            const typ = document.getElementById('typ').value;
-            const inputFoto = document.getElementById('dowod-foto');
-            
-            // Sprawdza, czy użytkownik dodał zdjęcie
-            const infoOZdjęciu = (inputFoto.files && inputFoto.files.length > 0) 
-                ? "\nDowód zdjęciowy: ZAŁĄCZONO" 
-                : "";
+            const data = {
+                data: new Date().toLocaleString('pl-PL'),
+                typ: document.getElementById('typ').value,
+                loc: document.getElementById('loc').value || "Nie podano",
+                desc: document.getElementById('desc').value || "Brak opisu",
+                foto: document.getElementById('foto').files.length > 0 ? "TAK" : "NIE"
+            };
 
-            alert("Dziękujemy za obywatelską postawę!\n\nZgłoszenie: " + typ + infoOZdjęciu + "\n\nZostało przekazane do odpowiednich służb. Status: PRIORYTET.");
-            
-            // Wraca do głównego menu po kliknięciu OK
-            window.location.href = 'index.html';
+            db.ref('logi').push(data).then(() => {
+                alert("Dziękujemy! Zgłoszenie zapisane w publicznej chmurze.");
+                window.location.href = 'index.html';
+            }).catch(e => alert("Błąd bazy: " + e.message));
         }
     </script>
 </body>
 </html>
+
