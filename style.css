@@ -26,7 +26,7 @@ body { background-color: #333; display: flex; justify-content: center; min-heigh
 
 .section-title { font-size: 13px; color: #6e6e73; text-transform: uppercase; margin: 20px 0 8px 4px; font-weight: 500; }
 
-/* Menu Styl */
+/* --- Menu Styl --- */
 .menu-list { background: #fff; border-radius: 12px; overflow: hidden; }
 .menu-item {
     display: flex; align-items: center; padding: 16px; border-bottom: 1px solid #f2f2f7;
@@ -35,32 +35,54 @@ body { background-color: #333; display: flex; justify-content: center; min-heigh
 .menu-item:active { background: #f2f2f7; }
 .menu-item .icon { font-size: 24px; margin-right: 16px; }
 
-/* Karta Konfidenta - DOPASOWANIE DO ZDJĘCIA */
-.karta-wrapper {
-    width: 100%; aspect-ratio: 597 / 942; background-image: url('karta.jpg');
-    background-size: 100% 100%; position: relative; border-radius: 12px; overflow: hidden;
+/* --- Karta Konfidenta (Wersja klasyczna z CSS) --- */
+.id-card {
+    background: linear-gradient(135deg, #e0eaf5 0%, #c1d5e0 100%);
+    border-radius: 12px; padding: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px;
+    border: 1px solid #a8c0d8; color: #1a1a1a;
+}
+.id-title {
+    text-align: center; font-weight: 900; font-size: 1.1rem;
+    margin-bottom: 15px; letter-spacing: 0.5px; text-transform: uppercase;
+}
+.id-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+.photo-box {
+    background-color: white; height: 140px; border: 2px dashed #ccc;
+    display: flex; justify-content: center; align-items: center;
+    color: #999; font-size: 0.8rem; text-align: center;
+    overflow: hidden; position: relative; cursor: pointer;
+}
+.photo-box img {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    object-fit: cover; display: none;
 }
 
-.karta-photo {
-    position: absolute; top: 10.5%; left: 8.5%; width: 39%; height: 35.5%;
-    cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center;
-}
-.karta-photo img { width: 100%; height: 100%; object-fit: cover; }
+.symbols-box { display: flex; flex-direction: column; align-items: center; justify-content: space-around; }
+.symbol { font-size: 3rem; }
 
-.karta-input {
-    position: absolute; left: 9%; width: 38%; height: 4.5%; background: transparent;
-    border: none; outline: none; font-weight: bold; text-align: center; font-size: 14px;
+.field { margin-top: 10px; }
+.field-label { font-size: 0.75rem; font-weight: bold; font-style: italic; }
+.field-input { 
+    background: white; border: none; padding: 5px; width: 100%; 
+    font-weight: bold; margin-top: 3px; font-family: inherit; font-size: 14px;
 }
-#in-pseudo { top: 56.5%; }
-#in-name { top: 68.8%; }
+.field-value-text { font-weight: bold; font-size: 0.9rem; margin-top: 3px; }
 
-/* Formularz zgłoszenia */
+.police-footer {
+    text-align: center; font-weight: 900; font-size: 1.8rem;
+    letter-spacing: 5px; margin-top: 15px; color: #002244;
+}
+
+/* --- Formularz zgłoszenia --- */
 .form-group { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
 .form-group label { display: block; font-size: 12px; color: #6e6e73; margin-bottom: 4px; }
 .form-group input, .form-group textarea, .form-group select {
-    width: 100%; border: none; outline: none; font-size: 16px; padding: 4px 0; font-family: inherit;
+    width: 100%; border: none; outline: none; font-size: 16px; padding: 4px 0; font-family: inherit; background: transparent;
 }
 
+/* --- Przyciski --- */
 .btn-primary {
     display: block; width: 100%; padding: 16px; background: var(--text-blue); color: white;
     border: none; border-radius: 12px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 10px;
