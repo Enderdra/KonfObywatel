@@ -6,9 +6,17 @@
     <title>Panel Dowodzenia</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .log-card { background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 4px solid #d32f2f; }
+        .log-card { background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 4px solid #d32f2f; position: relative; }
+        .log-date { font-size: 11px; color: #888; }
+        .log-type { font-weight: bold; font-size: 14px; margin: 4px 0; padding-right: 40px; }
         .login-box { background: white; border-radius: 12px; padding: 20px; text-align: center; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+        
+        /* Przycisk usuwania */
+        .del-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 18px; cursor: pointer; color: #ccc; }
+        .del-btn:hover { color: #d32f2f; }
+        
+        .clear-all-btn { background: #d32f2f; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; margin-bottom: 15px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -24,6 +32,7 @@
             </div>
 
             <div id="data-screen" style="display: none;">
+                <button class="clear-all-btn" onclick="wyczyscWszystko()">🗑️ WYCZYŚĆ CAŁY REJESTR</button>
                 <div id="lista-logow">Pobieranie tajnych danych...</div>
                 <button class="btn-primary" onclick="pobierzPlik()" style="background:#34c759; margin-top:20px">Pobierz raport (.txt)</button>
                 <button onclick="firebase.auth().signOut().then(()=>location.reload())" style="background:none; border:none; color:grey; width:100%; margin-top:15px; cursor:pointer;">Wyloguj</button>
@@ -51,12 +60,9 @@
         function handleLogin() {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
-            
-            firebase.auth().signInWithEmailAndPassword(email, pass)
-                .catch(err => alert("Błąd autoryzacji: Niepoprawne dane lub brak uprawnień."));
+            firebase.auth().signInWithEmailAndPassword(email, pass).catch(err => alert("Błąd: " + err.message));
         }
 
-        // Sprawdzaj czy użytkownik jest zalogowany
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
                 document.getElementById('login-screen').style.display = 'none';
@@ -72,18 +78,45 @@
                 const container = document.getElementById('lista-logow');
                 container.innerHTML = ''; allLogs = [];
                 if(!data) { container.innerHTML = "Baza jest pusta."; return; }
-                for(let id in data) {
-                    allLogs.push(data[id]);
-                    container.innerHTML = `<div class="log-card"><b>${data[id].data}</b><br>Typ: ${data[id].typ}<br>Lok: ${data[id].loc}</div>` + container.innerHTML;
-                }
-            }, err => {
-                alert("Błąd dostępu do bazy! Twoje konto nie ma uprawnień odczytu.");
+                
+                // Wyświetlamy donosy (najnowsze na górze)
+                const keys = Object.keys(data).reverse();
+                keys.forEach(id => {
+                    const l = data[id];
+                    allLogs.push(l);
+                    container.innerHTML += `
+                        <div class="log-card" id="card-${id}">
+                            <button class="del-btn" onclick="usunWpis('${id}')">🗑️</button>
+                            <div class="log-date">${l.data}</div>
+                            <div class="log-type">${l.typ}</div>
+                            <div style="font-size:12px">📍 ${l.loc}</div>
+                            <div style="font-size:12px; color: #666;">📝 ${l.desc}</div>
+                        </div>
+                    `;
+                });
             });
         }
 
+        // FUNKCJA USUWANIA JEDNEGO WPISU
+        function usunWpis(id) {
+            if(confirm("Czy na pewno chcesz trwale usunąć ten dowód?")) {
+                firebase.database().ref('logi/' + id).remove()
+                .then(() => alert("Wpis usunięty."))
+                .catch(err => alert("Błąd: " + err.message));
+            }
+        }
+
+        // FUNKCJA CZYSZCZENIA CAŁEJ BAZY
+        function wyczyscWszystko() {
+            if(confirm("⚠️ UWAGA! Czy na pewno chcesz usunąć WSZYSTKIE zgłoszenia z bazy? Tego nie da się cofnąć!")) {
+                firebase.database().ref('logi').remove()
+                .then(() => alert("Rejestr został wyczyszczony."));
+            }
+        }
+
         function pobierzPlik() {
-            let txt = "TAJNY RAPORT\n\n";
-            allLogs.slice().reverse().forEach(l => txt += `${l.data} | ${l.typ} | ${l.loc}\nOpis: ${l.desc}\n---\n`);
+            let txt = "TAJNY RAPORT OPERACYJNY\n\n";
+            allLogs.forEach(l => txt += `${l.data} | ${l.typ} | ${l.loc}\nOpis: ${l.desc}\n---\n`);
             const blob = new Blob([txt], {type: 'text/plain'});
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'raport.txt'; a.click();
         }
