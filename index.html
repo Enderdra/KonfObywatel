@@ -6,6 +6,7 @@
     <title>KonfObywatel</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
 </head>
 <body>
     <div class="app-container">
@@ -14,6 +15,7 @@
             <span>KonfObywatel</span>
             <span style="width:50px"></span>
         </div>
+
         <div class="content">
             <div class="section-title">Twoje dokumenty</div>
             <div class="menu-list">
@@ -27,10 +29,27 @@
             <div class="menu-list">
                 <a href="zgloszenie.html" class="menu-item">
                     <span class="icon">📢</span>
-                    <span>Zgłoś naruszenie zasad (Donos)</span>
+                    <span>Zgłoś naruszenie zasad</span>
                 </a>
+                <a href="logi.html" class="menu-item">
+                    <span class="icon">📁</span>
+                    <span>Publiczny Rejestr Zgłoszeń</span>
+                </a>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; font-size: 0.7rem; color: #999;">
+                Aplikacja satyryczna - KonfObywatel v3.0<br>
+                Połączono z chmurą danych.
             </div>
         </div>
     </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('Błąd SW: ', err));
+            });
+        }
+    </script>
 </body>
 </html>
