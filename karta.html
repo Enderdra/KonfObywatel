@@ -15,14 +15,48 @@
             <span style="width:50px"></span>
         </div>
         <div class="content">
-            <div id="capture-area" class="karta-wrapper">
-                <label for="img-input" class="karta-photo">
-                    <input type="file" id="img-input" hidden accept="image/*">
-                    <img id="preview" src="" style="display:none">
-                    <span id="label-text" style="font-size:10px; color:#aaa">DODAJ FOTO</span>
-                </label>
-                <input type="text" id="in-pseudo" class="karta-input" placeholder="PSEUDONIM">
-                <input type="text" id="in-name" class="karta-input" placeholder="IMIĘ I NAZWISKO">
+            
+            <div id="capture-area" class="id-card">
+                <div class="id-title">Karta Stałego Konfidenta</div>
+                
+                <div class="id-grid">
+                    <div>
+                        <label for="img-input" class="photo-box">
+                            <input type="file" id="img-input" hidden accept="image/*">
+                            <span id="label-text">Kliknij<br>aby dodać zdjęcie</span>
+                            <img id="preview" src="" alt="twoje zdjęcie">
+                        </label>
+                        <div class="field">
+                            <div class="field-label">pseudonim</div>
+                            <input type="text" class="field-input" value="Sygnalista">
+                        </div>
+                        <div class="field">
+                            <div class="field-label">imie i nazwisko</div>
+                            <input type="text" class="field-input" value="Janusz Nosacz">
+                        </div>
+                        <div class="field">
+                            <div class="field-label">pakiet</div>
+                            <div class="field-value-text">PLATINUM</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="symbols-box">
+                            <div class="symbol">🦅</div>
+                            <div class="symbol">👮‍♂️</div>
+                        </div>
+                        <div class="field" style="text-align: right;">
+                            <div class="field-label">ważna do:</div>
+                            <div class="field-value-text">Dożywocie</div>
+                        </div>
+                        <div class="field" style="text-align: right; margin-top: 20px;">
+                            <div class="field-label">Nadane z art.</div>
+                            <div class="field-value-text">ART.60 PAR.1</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="police-footer">P O L I C J A</div>
             </div>
 
             <button class="btn-primary" onclick="downloadID()">Pobierz do galerii (JPG)</button>
@@ -30,6 +64,7 @@
     </div>
 
     <script>
+        // Obsługa wgrywania zdjęcia
         const input = document.getElementById('img-input');
         input.onchange = e => {
             const [file] = input.files;
@@ -40,8 +75,15 @@
             }
         }
 
+        // Obsługa pobierania karty
         function downloadID() {
-            html2canvas(document.getElementById('capture-area')).then(canvas => {
+            // Ukrywamy ewentualne migające kursory w inputach przed zrobieniem screena
+            document.activeElement.blur(); 
+            
+            html2canvas(document.getElementById('capture-area'), {
+                scale: 2, // Lepsza jakość obrazka
+                backgroundColor: null
+            }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = 'karta-konfidenta.jpg';
                 link.href = canvas.toDataURL('image/jpeg', 0.9);
