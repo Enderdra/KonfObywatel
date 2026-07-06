@@ -163,6 +163,43 @@
                 location.reload();
             }
         }
+        <!-- PWA GUARD - Baner instalacyjny -->
+<div id="pwa-guard" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px;">
+    <h1>🦅 KonfObywatel</h1>
+    <p>Aby zachować najwyższy poziom bezpieczeństwa, zainstaluj aplikację na pulpicie.</p>
+    <button id="btn-install" style="padding:15px 30px; background:#34c759; color:white; border:none; border-radius:12px; font-size:18px;">Zainstaluj na pulpicie</button>
+</div>
+
+<script>
+    let deferredPrompt;
+    const pwaGuard = document.getElementById('pwa-guard');
+
+    // 1. Sprawdź, czy jesteśmy w trybie "standalone" (zainstalowana apka)
+    if (!window.matchMedia('(display-mode: standalone)').matches) {
+        // Jeśli NIE JEST zainstalowana, pokazujemy Guard
+        pwaGuard.style.display = "flex";
+    }
+
+    // 2. Obsługa przycisku instalacji
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
+
+    document.getElementById('btn-install').addEventListener('click', () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    pwaGuard.style.display = "none";
+                }
+            });
+        } else {
+            alert("Aby zainstalować: Kliknij w przeglądarce 'Dodaj do ekranu głównego' (ikona udostępniania na iOS).");
+        }
+    });
+</script>
+
     </script>
 </body>
 </html>
