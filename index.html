@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logowanie - KonfObywatel</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .login-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; background-color: #f2f2f7; padding: 20px; text-align: center;
+        }
+        .logo-box { font-size: 4rem; margin-bottom: 10px; }
+        .app-title { font-size: 24px; font-weight: 800; color: #1c1c1e; margin-bottom: 10px; }
+        .instruction-text { font-size: 14px; color: #666; margin-bottom: 30px; }
+        
+        .pin-input {
+            width: 100%; max-width: 300px; padding: 15px; font-size: 20px; 
+            text-align: center; border: 2px solid #c7c7cc; border-radius: 12px; 
+            margin-bottom: 20px; outline: none; letter-spacing: 5px;
+        }
+        .pin-input:focus { border-color: #007aff; }
+
+        .btn-login {
+            width: 100%; max-width: 300px; padding: 16px; background: #007aff; 
+            color: white; border: none; border-radius: 12px; font-size: 18px; 
+            font-weight: 600; cursor: pointer; margin-bottom: 15px;
+        }
+
+        .btn-bio {
+            width: 100%; max-width: 300px; padding: 16px; background: transparent; 
+            color: #007aff; border: 2px solid #007aff; border-radius: 12px; 
+            font-size: 18px; font-weight: 600; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+
+        #scan-overlay {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95); flex-direction: column; 
+            align-items: center; justify-content: center; z-index: 100;
+        }
+        .scan-icon { font-size: 5rem; color: #007aff; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.5; transform: scale(0.9); } }
+    </style>
+</head>
+<body onload="sprawdzStan()">
+
+    <div class="login-container">
+        <div class="logo-box">🦅</div>
+        <div class="app-title">KonfObywatel</div>
+        <div class="instruction-text" id="instrukcja">Sprawdzanie statusu autoryzacji...</div>
+
+        <input type="password" id="haslo" class="pin-input" placeholder="Wprowadź hasło">
+        
+        <button class="btn-login" onclick="zalogujHaslem()" id="btn-login-text">Zaloguj się</button>
+        <button class="btn-bio" onclick="zalogujBiometria()" id="btn-bio" style="display: none;">
+            <span>Zaloguj biometrycznie</span>
+            <span style="font-size: 24px;">🪪</span>
+        </button>
+
+        <button onclick="zresetujApke()" style="background:none; border:none; color:red; font-size:12px; margin-top:30px; text-decoration:underline; cursor:pointer;">
+            Zapomniałem hasła (Reset danych)
+        </button>
+    </div>
+
+    <div id="scan-overlay">
+        <div class="scan-icon">🪪</div>
+        <h3 style="margin-top: 20px; color: #1c1c1e;">Weryfikacja biometryczna...</h3>
+    </div>
+
+    <script>
+        function sprawdzStan() {
+            const zapisaneHaslo = localStorage.getItem('moje_haslo');
+            const naglowek = document.getElementById('instrukcja');
+            const hasloInput = document.getElementById('haslo');
+            const btnLogin = document.getElementById('btn-login-text');
+            const btnBio = document.getElementById('btn-bio');
+
+            if (!zapisaneHaslo) {
+                // TRYB PIERWSZEGO URUCHOMIENIA
+                naglowek.innerText = "Witaj! Ustaw swoje unikalne hasło dostępu.";
+                hasloInput.placeholder = "Wymyśl hasło";
+                btnLogin.innerText = "Zapisz i kontynuuj";
+                btnBio.style.display = "none";
+            } else {
+                // TRYB NORMALNEGO LOGOWANIA
+                naglowek.innerText = "Wprowadź hasło, aby odblokować aplikację.";
+                hasloInput.placeholder = "Twoje hasło";
+                btnLogin.innerText = "Odblokuj";
+                btnBio.style.display = "flex"; // Pokazujemy biometrię, bo hasło już istnieje
+            }
+        }
+
+        function zalogujHaslem() {
+            const wpisane = document.getElementById('haslo').value;
+            const zapisaneHaslo = localStorage.getItem('moje_haslo');
+
+            if (wpisane.length < 3) {
+                alert("Hasło musi mieć co najmniej 3 znaki!");
+                return;
+            }
+
+            if (!zapisaneHaslo) {
+                // Zapisujemy nowe hasło do pamięci
+                localStorage.setItem('moje_haslo', wpisane);
+                alert("Hasło zostało ustawione pomyślnie!");
+                window.location.href = 'pulpit.html';
+            } else {
+                // Sprawdzamy istniejące hasło
+                if (wpisane === zapisaneHaslo) {
+                    window.location.href = 'pulpit.html';
+                } else {
+                    alert("Odmowa dostępu! Wprowadzono błędne hasło.");
+                    document.getElementById('haslo').value = "";
+                }
+            }
+        }
+
+        function zalogujBiometria() {
+            // Skoro przycisk jest widoczny, wiemy że urządzenie jest zaufane (ma hasło w pamięci)
+            document.getElementById('scan-overlay').style.display = 'flex';
+            
+            setTimeout(() => {
+                window.location.href = 'pulpit.html';
+            }, 1500);
+        }
+
+        function zresetujApke() {
+            if(confirm("Czy na pewno chcesz usunąć swoje hasło? Zostaniesz wylogowany.")) {
+                localStorage.removeItem('moje_haslo');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
+
