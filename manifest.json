@@ -1,16 +1,15 @@
 {
   "name": "KonfObywatel",
   "short_name": "KonfObywatel",
-  "start_url": "./index.html",
+  "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#333333",
-  "theme_color": "#003366",
+  "background_color": "#f2f2f7",
+  "theme_color": "#007aff",
   "icons": [
     {
-      "src": "shield-lock.svg",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "shield-lock.svg", 
+      "sizes": "any",
+      "type": "image/svg+xml"
     }
   ]
 }
