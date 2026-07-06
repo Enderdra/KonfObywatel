@@ -127,7 +127,7 @@
                     publicKey: {
                         challenge: randomChallenge(),
                         rp: { name: "KonfObywatel", id: window.location.hostname },
-                        user: { id: randomChallenge(), name: "obywatel", displayName: "Oficer" },
+                        user: { id: randomChallenge(), name: "Aplikacja", displayName: "Użytkownik" },
                         pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
                         authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required", residentKey: "required" },
                         timeout: 60000, attestation: "none"
