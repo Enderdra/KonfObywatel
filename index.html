@@ -6,35 +6,20 @@
     <title>Logowanie - KonfObywatel</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .login-container {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; background-color: #f2f2f7; padding: 20px; text-align: center;
-        }
+        .login-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f2f2f7; padding: 20px; text-align: center; }
         .logo-box { font-size: 4rem; margin-bottom: 10px; }
         .app-title { font-size: 24px; font-weight: 800; color: #1c1c1e; margin-bottom: 10px; }
         .instruction-text { font-size: 14px; color: #666; margin-bottom: 30px; }
         
-        .pin-input {
-            width: 100%; max-width: 300px; padding: 15px; font-size: 20px; 
-            text-align: center; border: 2px solid #c7c7cc; border-radius: 12px; 
-            margin-bottom: 20px; outline: none; letter-spacing: 5px; background: white;
-        }
+        .pin-section { width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .pin-input { width: 100%; max-width: 300px; padding: 15px; font-size: 20px; text-align: center; border: 2px solid #c7c7cc; border-radius: 12px; margin-bottom: 20px; outline: none; letter-spacing: 5px; background: white; }
         .pin-input:focus { border-color: #007aff; }
 
-        .btn-login {
-            width: 100%; max-width: 300px; padding: 16px; background: #007aff; 
-            color: white; border: none; border-radius: 12px; font-size: 18px; 
-            font-weight: 600; cursor: pointer; margin-bottom: 15px;
-        }
-
-        .btn-bio {
-            width: 100%; max-width: 300px; padding: 16px; background: transparent; 
-            border: 2px solid #007aff; border-radius: 12px; font-size: 17px; 
-            font-weight: 600; cursor: pointer; display: flex; align-items: center; 
-            justify-content: center; gap: 10px; margin-bottom: 10px;
-        }
+        .btn-login { width: 100%; max-width: 300px; padding: 16px; background: #007aff; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: 600; cursor: pointer; margin-bottom: 15px; }
+        .btn-bio { width: 100%; max-width: 300px; padding: 16px; background: transparent; border: 2px solid #007aff; border-radius: 12px; font-size: 17px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; }
         
         #error-msg { color: #d32f2f; font-size: 13px; margin-top: 10px; font-weight: bold; min-height: 15px; }
+        .awaryjny-pin { color: #007aff; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 15px; display: none; }
     </style>
 </head>
 <body onload="sprawdzStan()">
@@ -42,58 +27,62 @@
     <div class="login-container">
         <div class="logo-box">🦅</div>
         <div class="app-title">KonfObywatel</div>
-        <div class="instruction-text" id="instrukcja">Sprawdzanie modułów bezp...</div>
+        <div class="instruction-text" id="instrukcja">Sprawdzanie modułów bezpieczeństwa...</div>
 
-        <input type="password" id="haslo" class="pin-input" placeholder="Wprowadź hasło">
-        
-        <button class="btn-login" onclick="zalogujHaslem()" id="btn-login-text">Zaloguj się</button>
+        <div class="pin-section" id="sekcja-pin">
+            <input type="password" id="haslo" class="pin-input" placeholder="Wprowadź PIN">
+            <button class="btn-login" onclick="zalogujHaslem()" id="btn-login-text">Zaloguj się</button>
+        </div>
         
         <button class="btn-bio" onclick="aktywujBiometrie()" id="btn-aktywuj-bio" style="display: none; border-color:#34c759; color:#34c759;">
-            <span>Skonfiguruj systemowe FaceID/TouchID</span>
-            <span style="font-size: 22px;">⚙️</span>
+            <span>Aktywuj biometrię (Zalecane)</span><span style="font-size: 22px;">⚙️</span>
         </button>
 
-        <button class="btn-bio" onclick="zalogujBiometria()" id="btn-bio" style="display: none; color:#007aff;">
-            <span>Użyj FaceID / TouchID</span>
-            <span style="font-size: 22px;">🪪</span>
+        <button class="btn-bio" onclick="zalogujBiometria()" id="btn-bio" style="display: none; color:#007aff; border-color: #007aff;">
+            <span>Zaloguj się biometrycznie</span><span style="font-size: 22px;">🪪</span>
         </button>
+
+        <div class="awaryjny-pin" id="awaryjny-pin" onclick="pokazPin()">Wprowadź kod PIN</div>
 
         <div id="error-msg"></div>
 
-        <button onclick="zresetujApke()" style="background:none; border:none; color:#999; font-size:12px; margin-top:40px; text-decoration:underline; cursor:pointer;">
-            Awaryjny reset danych logowania
+        <button onclick="zresetujApke()" style="background:none; border:none; color:#999; font-size:12px; margin-top:50px; text-decoration:underline; cursor:pointer;">
+            Awaryjny reset powiązania
         </button>
     </div>
 
     <script>
-        // Funkcja losująca dla zaawansowanej kryptografii WebAuthn
-        function randomChallenge() {
-            return crypto.getRandomValues(new Uint8Array(32));
-        }
+        function randomChallenge() { return crypto.getRandomValues(new Uint8Array(32)); }
 
         function sprawdzStan() {
             const zapisaneHaslo = localStorage.getItem('moje_haslo');
             const maBiometrie = localStorage.getItem('biometria_aktywna');
+            
             const naglowek = document.getElementById('instrukcja');
             const hasloInput = document.getElementById('haslo');
             const btnLogin = document.getElementById('btn-login-text');
             const btnBio = document.getElementById('btn-bio');
             const btnAktywujBio = document.getElementById('btn-aktywuj-bio');
+            const sekcjaPin = document.getElementById('sekcja-pin');
+            const awaryjnyPin = document.getElementById('awaryjny-pin');
 
             if (!zapisaneHaslo) {
-                naglowek.innerText = "KROK 1: Ustaw swoje tajne hasło (PIN).";
-                hasloInput.placeholder = "Wymyśl hasło";
-                btnLogin.innerText = "Zapisz hasło";
+                naglowek.innerText = "KROK 1: Ustaw awaryjny kod PIN.";
+                hasloInput.placeholder = "Nowy PIN";
+                btnLogin.innerText = "Zapisz PIN";
             } else {
-                naglowek.innerText = "Wprowadź hasło lub użyj systemu biometrii.";
-                hasloInput.placeholder = "Twoje hasło";
+                naglowek.innerText = "Zaloguj się do aplikacji.";
+                hasloInput.placeholder = "Twój PIN";
                 btnLogin.innerText = "Odblokuj";
                 
-                // Sprawdzamy, czy telefon/przeglądarka wspiera PRAWDZIWĄ biometrię
                 if (window.PublicKeyCredential) {
                     if (maBiometrie === 'TAK') {
+                        // Kiedy wchodzi zaufany obywatel: CHOWAMY PIN!
+                        sekcjaPin.style.display = "none";
                         btnBio.style.display = "flex";
-                        // Jeśli wchodzi na stronę i ma włączoną biometrię - automatycznie wywołujemy skaner sprzętowy!
+                        awaryjnyPin.style.display = "block"; // Pokaż opcję "Wprowadź PIN"
+                        
+                        // Automatyczne wywołanie skanera po 0.5s od wejścia na stronę
                         setTimeout(() => zalogujBiometria(), 500);
                     } else {
                         btnAktywujBio.style.display = "flex";
@@ -102,64 +91,56 @@
             }
         }
 
+        // Gdy kliknie "Wprowadź kod PIN", wraca zwykłe pole tekstowe
+        function pokazPin() {
+            document.getElementById('sekcja-pin').style.display = "flex";
+            document.getElementById('btn-bio').style.display = "none";
+            document.getElementById('awaryjny-pin').style.display = "none";
+        }
+
         function zalogujHaslem() {
             const wpisane = document.getElementById('haslo').value;
             const zapisaneHaslo = localStorage.getItem('moje_haslo');
 
             if (wpisane.length < 3) {
-                document.getElementById('error-msg').innerText = "Hasło musi mieć minimum 3 znaki!";
+                document.getElementById('error-msg').innerText = "PIN musi mieć min. 3 znaki!";
                 return;
             }
 
             if (!zapisaneHaslo) {
                 localStorage.setItem('moje_haslo', wpisane);
-                alert("Hasło ustawione! Skonfiguruj teraz autoryzację odciskiem palca/twarzą.");
+                alert("PIN ustawiony! Jeśli Twój telefon obsługuje biometrię, aktywuj ją teraz.");
                 location.reload(); 
             } else {
                 if (wpisane === zapisaneHaslo) {
                     window.location.href = 'pulpit.html';
                 } else {
-                    document.getElementById('error-msg').innerText = "Odmowa dostępu! Błędne hasło.";
+                    document.getElementById('error-msg').innerText = "Odmowa dostępu! Błędny PIN.";
                     document.getElementById('haslo').value = "";
                 }
             }
         }
 
-        // TWORZENIE KLUCZA SPRZĘTOWEGO (Natywna Biometria Systemu)
         async function aktywujBiometrie() {
             try {
                 const credential = await navigator.credentials.create({
                     publicKey: {
                         challenge: randomChallenge(),
                         rp: { name: "KonfObywatel", id: window.location.hostname },
-                        user: {
-                            id: randomChallenge(),
-                            name: "obywatel",
-                            displayName: "Oficer KonfObywatel"
-                        },
+                        user: { id: randomChallenge(), name: "użytkownik@aplikacja", displayName: "" },
                         pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
-                        authenticatorSelection: {
-                            authenticatorAttachment: "platform", // Wymusza hardware telefonu (czujnik palca/aparaty)
-                            userVerification: "required",
-                            residentKey: "required"
-                        },
-                        timeout: 60000,
-                        attestation: "none"
+                        authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required", residentKey: "required" },
+                        timeout: 60000, attestation: "none"
                     }
                 });
-
-                // Zapisujemy flagę, że urządzenie jest skonfigurowane sprzętowo
                 localStorage.setItem('biometria_aktywna', 'TAK');
-                alert("Skaner sprzętowy skonfigurowany pomyślnie! Zaraz zostaniesz zalogowany.");
+                alert("FaceID / TouchID dodane pomyślnie!");
                 window.location.href = 'pulpit.html';
-                
             } catch (err) {
-                document.getElementById('error-msg').innerText = "Anulowano lub telefon odrzucił powiązanie.";
-                console.error(err);
+                document.getElementById('error-msg').innerText = "Anulowano konfigurację biometrii.";
             }
         }
 
-        // LOGOWANIE FIZYCZNE (Wywołanie okna FaceID / TouchID)
         async function zalogujBiometria() {
             try {
                 const assertion = await navigator.credentials.get({
@@ -169,18 +150,15 @@
                         userVerification: "required"
                     }
                 });
-                
-                // Jeśli odcisk/twarz przeszły pozytywnie na poziomie procesora w telefonie
-                if (assertion) {
-                    window.location.href = 'pulpit.html';
-                }
+                if (assertion) window.location.href = 'pulpit.html';
             } catch (err) {
-                console.error("Użytkownik anulował sprzętowe skanowanie.", err);
+                // Skrypt zatrzyma się tutaj, jeśli obywatel anuluje skanowanie. Użytkownik nadal może użyć PINu!
+                console.error("Skanowanie przerwane.");
             }
         }
 
         function zresetujApke() {
-            if(confirm("Czy na pewno chcesz usunąć powiązanie biometryczne i hasło z tego telefonu?")) {
+            if(confirm("Odłączyć to urządzenie od aplikacji?")) {
                 localStorage.clear();
                 location.reload();
             }
