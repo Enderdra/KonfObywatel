@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logowanie - KonfObywatel</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
     <style>
         .login-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f2f2f7; padding: 20px; text-align: center; }
         .logo-box { font-size: 4rem; margin-bottom: 10px; }
@@ -46,64 +47,7 @@
 
         <div id="error-msg"></div>
 
-        <button onclick="zresetujApke()" style="background:none; border:none; color:#999; font-size:12px; margin-top:50px; text-decoration:underline; cursor:pointer;">
-            Awaryjny reset powiązania
-        </button>
-    </div>
-
-    <script>
-        function randomChallenge() { return crypto.getRandomValues(new Uint8Array(32)); }
-
-        function sprawdzStan() {
-            const zapisaneHaslo = localStorage.getItem('moje_haslo');
-            const maBiometrie = localStorage.getItem('biometria_aktywna');
-            
-            const naglowek = document.getElementById('instrukcja');
-            const hasloInput = document.getElementById('haslo');
-            const btnLogin = document.getElementById('btn-login-text');
-            const btnBio = document.getElementById('btn-bio');
-            const btnAktywujBio = document.getElementById('btn-aktywuj-bio');
-            const sekcjaPin = document.getElementById('sekcja-pin');
-            const awaryjnyPin = document.getElementById('awaryjny-pin');
-
-            if (!zapisaneHaslo) {
-                naglowek.innerText = "KROK 1: Ustaw awaryjny kod PIN.";
-                hasloInput.placeholder = "Nowy PIN";
-                btnLogin.innerText = "Zapisz PIN";
-            } else {
-                naglowek.innerText = "Zaloguj się do aplikacji.";
-                hasloInput.placeholder = "Twój PIN";
-                btnLogin.innerText = "Odblokuj";
-                
-                if (window.PublicKeyCredential) {
-                    if (maBiometrie === 'TAK') {
-                        // Kiedy wchodzi zaufany obywatel: CHOWAMY PIN!
-                        sekcjaPin.style.display = "none";
-                        btnBio.style.display = "flex";
-                        awaryjnyPin.style.display = "block"; // Pokaż opcję "Wprowadź PIN"
-                        
-                        // Automatyczne wywołanie skanera po 0.5s od wejścia na stronę
-                        setTimeout(() => zalogujBiometria(), 500);
-                    } else {
-                        btnAktywujBio.style.display = "flex";
-                    }
-                }
-            }
-        }
-
-        // Gdy kliknie "Wprowadź kod PIN", wraca zwykłe pole tekstowe
-        function pokazPin() {
-            document.getElementById('sekcja-pin').style.display = "flex";
-            document.getElementById('btn-bio').style.display = "none";
-            document.getElementById('awaryjny-pin').style.display = "none";
-        }
-
-        function zalogujHaslem() {
-            const wpisane = document.getElementById('haslo').value;
-            const zapisaneHaslo = localStorage.getItem('moje_haslo');
-
-            if (wpisane.length < 3) {
-                document.getElementById('error-msg').innerText = "PIN musi mieć min. 3 znaki!";
+        <button onclick="
                 return;
             }
 
