@@ -10,19 +10,20 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: #f2f2f7; height: 100vh; display: flex; flex-direction: column; color: #1a1a1c; }
         
-        header { padding: 20px; background: #f2f2f7; font-weight: 800; font-size: 24px; }
+        header { padding: 20px 20px 5px; background: #f2f2f7; font-weight: 800; font-size: 32px; margin-bottom: 15px; }
         main { flex: 1; padding: 10px 20px 90px; overflow-y: auto; }
         
         .category-title { font-size: 15px; font-weight: 700; color: #333; margin: 20px 5px 10px; }
         .service-group { background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
-        .service-item { display: flex; align-items: center; padding: 16px 15px; text-decoration: none; color: #1a1a1c; position: relative; background: #ffffff; }
+        .service-item { display: flex; align-items: center; padding: 16px 15px; text-decoration: none; color: #1a1a1c; position: relative; background: #ffffff; cursor: pointer; }
         .service-item:active { background: #f9f9f9; }
         .service-item:not(:last-child)::after { content: ''; position: absolute; bottom: 0; left: 50px; right: 0; height: 1px; background: #e5e5ea; }
         .service-icon { font-size: 20px; width: 35px; }
         .service-name { flex: 1; font-size: 16px; font-weight: 600; }
         .service-arrow { color: #c7c7cc; font-size: 18px; font-weight: 600; }
 
-        .btn-logout { background: #fff; color: #0052cc; text-align: center; padding: 16px; font-weight: 700; border-radius: 16px; margin-top: 30px; cursor: pointer; }
+        .btn-logout { background: #fff; color: #0052cc; text-align: center; padding: 16px; font-weight: 700; border-radius: 16px; margin-top: 30px; margin-bottom: 20px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .btn-logout:active { background: #f9f9f9; }
 
         nav.bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; border-top: 1px solid #e5e5ea; display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 100; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #8e8e93; font-size: 10px; font-weight: 600; flex: 1; }
@@ -37,24 +38,25 @@
     <main>
         <div class="category-title">Twoje dane</div>
         <div class="service-group">
-            <div class="service-item"><div class="service-icon">👤</div><div class="service-name">Profil Oficera</div></div>
-            <div class="service-item"><div class="service-icon">📝</div><div class="service-name">Edytuj dane osobowe</div></div>
+            <div class="service-item"><div class="service-icon">👤</div><div class="service-name">Profil Oficera</div><div class="service-arrow">›</div></div>
+            <div class="service-item"><div class="service-icon">📝</div><div class="service-name">Edytuj dane osobowe</div><div class="service-arrow">›</div></div>
         </div>
 
         <div class="category-title">Ustawienia</div>
         <div class="service-group">
-            <div class="service-item" onclick="alert('Tryb ciemny w przygotowaniu...')"><div class="service-icon">🌙</div><div class="service-name">Wygląd aplikacji</div></div>
-            <div class="service-item" onclick="alert('Wszystkie powiadomienia o donosach aktywne.')"><div class="service-icon">🔔</div><div class="service-name">Powiadomienia</div></div>
-            <div class="service-item" onclick="instrukcjaPWA()"><div class="service-icon">📲</div><div class="service-name">Zainstaluj aplikację (PWA)</div></div>
-            <div class="service-item" onclick="aktualizujPWA()"><div class="service-icon">🔄</div><div class="service-name">Aktualizacja aplikacji</div></div>
+            <div class="service-item" onclick="alert('Tryb ciemny w przygotowaniu...')"><div class="service-icon">🌙</div><div class="service-name">Wygląd aplikacji</div><div class="service-arrow">›</div></div>
+            <div class="service-item" onclick="alert('Wszystkie powiadomienia o donosach aktywne.')"><div class="service-icon">🔔</div><div class="service-name">Powiadomienia</div><div class="service-arrow">›</div></div>
+            <div class="service-item" onclick="instrukcjaPWA()"><div class="service-icon">📲</div><div class="service-name">Zainstaluj aplikację (PWA)</div><div class="service-arrow">›</div></div>
+            <div class="service-item" onclick="aktualizujPWA()"><div class="service-icon">🔄</div><div class="service-name">Aktualizacja aplikacji</div><div class="service-arrow">›</div></div>
         </div>
 
         <div class="category-title">Pozostałe</div>
         <div class="service-group">
-            <div class="service-item" onclick="confirm('Czy na pewno chcesz usunąć wszystkie dane lokalne i dezaktywować KonfObywatela?') && zresetujApke()"><div class="service-icon">❌</div><div class="service-name">Dezaktywuj aplikację</div></div>
-            <div class="service-item"><div class="service-icon">ℹ️</div><div class="service-name">O aplikacji</div></div>
+            <div class="service-item" onclick="dezaktywujApke()"><div class="service-icon">❌</div><div class="service-name">Dezaktywuj aplikację</div><div class="service-arrow">›</div></div>
+            <div class="service-item"><div class="service-icon">ℹ️</div><div class="service-name">O aplikacji</div><div class="service-arrow">›</div></div>
         </div>
 
+        <!-- Osobny przycisk wylogowania -->
         <div class="btn-logout" onclick="wyloguj()">Wyloguj się</div>
     </main>
 
@@ -65,7 +67,7 @@
         <a href="uslugi.html" class="nav-item">
             <span class="nav-icon">📁</span><span>Usługi</span>
         </a>
-        <a href="#" class="nav-item">
+        <a href="#" class="nav-item" onclick="alert('Moduł skanera QR w przygotowaniu!')">
             <span class="nav-icon">🔲</span><span>Kod QR</span>
         </a>
         <a href="logi.html" class="nav-item active">
@@ -74,31 +76,68 @@
     </nav>
 
     <script>
-        function instrukcjaPWA() {
-            alert("Aby zainstalować jako aplikację: Kliknij 'Udostępnij' -> 'Dodaj do ekranu głównego' (iOS) lub 'Zainstaluj aplikację' w menu przeglądarki (Android).");
-        }
+        // 0. Nasłuchiwanie na zdarzenie instalacji (PWA)
+        window.deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            window.deferredPrompt = e;
+        });
 
-        function aktualizujPWA() {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(registrations => {
-                    for(let registration of registrations) {
-                        registration.update();
+        // 1. INSTALACJA
+        function instrukcjaPWA() {
+            if (window.deferredPrompt) {
+                window.deferredPrompt.prompt();
+                window.deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('Pomyślnie zainstalowano PWA');
                     }
+                    window.deferredPrompt = null; 
                 });
-                alert("Sprawdzam dostępność aktualizacji...");
+            } else {
+                alert("Aby zainstalować system: Użyj opcji 'Dodaj do ekranu głównego' w menu przeglądarki (Safari na iOS) lub 'Zainstaluj' (Chrome na Android).");
             }
         }
 
+        // 2. AKTUALIZACJA
+        async function aktualizujPWA() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    let updated = false;
+                    
+                    for (let registration of registrations) {
+                        await registration.update();
+                        updated = true;
+                    }
+
+                    if (updated) {
+                        alert("Pobrano najnowszą wersję z serwera. Aplikacja zostanie odświeżona.");
+                        window.location.reload(true);
+                    } else {
+                        alert("Aplikacja jest już w najnowszej wersji.");
+                    }
+                } catch (err) {
+                    alert("Wystąpił błąd podczas sprawdzania aktualizacji.");
+                }
+            } else {
+                alert("Błąd: Tryb offline/PWA nie jest obsługiwany w tej przeglądarce.");
+            }
+        }
+
+        // 3. WYLOGOWANIE
         function wyloguj() {
             if(confirm("Czy na pewno chcesz opuścić sesję?")) {
-                window.location.href = 'index.html'; // Przekierowanie do logowania
+                window.location.href = 'index.html';
             }
         }
 
-        function zresetujApke() {
-            localStorage.clear();
-            alert("Aplikacja została dezaktywowana i zresetowana.");
-            window.location.href = 'index.html';
+        // 4. DEZAKTYWACJA (RESET)
+        function dezaktywujApke() {
+            if(confirm("Czy na pewno chcesz usunąć wszystkie dane lokalne i dezaktywować KonfObywatela?")) {
+                localStorage.clear();
+                alert("Aplikacja została pomyślnie dezaktywowana.");
+                window.location.href = 'index.html';
+            }
         }
     </script>
 </body>
