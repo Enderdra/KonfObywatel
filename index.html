@@ -153,35 +153,28 @@
             const maBiometrie = localStorage.getItem('biometria_aktywna');
 
             if (!zapisaneHaslo) {
-                // KROK 1: Pierwsze uruchomienie - Ustawianie hasła
                 greetingText.innerText = "Witaj w systemie!";
                 subGreetingText.innerText = "Ustaw hasło dostępu do aplikacji.";
                 
                 pokazWidokHasla();
-                btnSwitchBio.style.display = "none"; // Ukrywamy przycisk biometrii, bo jeszcze jej nie ma
+                btnSwitchBio.style.display = "none";
                 btnMainAction.innerText = "Zapisz hasło";
             } else {
-                // NORMALNE LOGOWANIE
                 if (window.PublicKeyCredential && maBiometrie === 'TAK') {
-                    // Ma skonfigurowaną biometrię -> Pokazujemy widok biometrii
                     pokazWidokBiometrii();
-                    // Auto wywołanie skanera po 0.5s
                     setTimeout(() => zalogujBiometria(), 500);
                 } else if (window.PublicKeyCredential && maBiometrie !== 'TAK') {
-                    // Urządzenie wspiera biometrię, ale nie jest włączona -> Widok hasła z zachętą
                     pokazWidokHasla();
                     btnSwitchBio.innerText = "Aktywuj biometrię (Zalecane)";
                     btnSwitchBio.style.display = "block";
                     btnSwitchBio.onclick = aktywujBiometrie;
                 } else {
-                    // Brak wsparcia dla biometrii -> Tylko hasło
                     pokazWidokHasla();
                     btnSwitchBio.style.display = "none";
                 }
             }
         }
 
-        // FUNKCJE PRZEŁĄCZANIA WIDOKÓW
         function pokazWidokHasla() {
             errorMsg.innerText = "";
             viewBio.style.display = "none";
@@ -200,7 +193,6 @@
             actionsBio.style.display = "block";
         }
 
-        // UKRYWANIE/POKAZYWANIE HASŁA (Ikona Oka)
         function togglePasswordVisibility() {
             const input = document.getElementById('haslo');
             if (input.type === "password") {
@@ -220,12 +212,10 @@
             }
 
             if (!zapisaneHaslo) {
-                // Zapisywanie nowego hasła
                 localStorage.setItem('moje_haslo', wpisane);
                 alert("Hasło zostało ustawione pomyślnie.");
                 location.reload(); 
             } else {
-                // Sprawdzanie hasła
                 if (wpisane === zapisaneHaslo) {
                     window.location.href = 'pulpit.html';
                 } else {
@@ -241,7 +231,6 @@
                     publicKey: {
                         challenge: randomChallenge(),
                         rp: { name: "KonfObywatel", id: window.location.hostname },
-                        // Zmieniono nazwę na użytkownik@aplikacja
                         user: { id: randomChallenge(), name: "użytkownik@aplikacja", displayName: "użytkownik@aplikacja" },
                         pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
                         authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required", residentKey: "required" },
@@ -249,7 +238,6 @@
                     }
                 });
                 
-                // Zapisanie ID klucza, żeby urządzenie mogło go później konkretnie wyszukać
                 const rawIdArr = Array.from(new Uint8Array(credential.rawId));
                 localStorage.setItem('biometria_id', JSON.stringify(rawIdArr));
                 localStorage.setItem('biometria_aktywna', 'TAK');
@@ -265,7 +253,6 @@
             try {
                 errorMsg.innerText = "";
                 
-                // Pobieramy ID zapisanego klucza w celu przekazania go do skanera
                 const savedBioId = JSON.parse(localStorage.getItem('biometria_id') || 'null');
                 let allowCredentials = [];
                 
@@ -280,14 +267,13 @@
                     publicKey: {
                         challenge: randomChallenge(),
                         rpId: window.location.hostname,
-                        allowCredentials: allowCredentials, // Nakazuje szukać tego konkretnego klucza
+                        allowCredentials: allowCredentials,
                         userVerification: "required"
                     }
                 });
                 if (assertion) window.location.href = 'pulpit.html';
             } catch (err) {
                 console.error("Skanowanie przerwane.", err);
-                // Nie wyświetlamy chamskiego błędu, bo użytkownik może chcieć wpisać hasło
             }
         }
 
@@ -298,7 +284,6 @@
             }
         }
 
-        // START APLIKACJI
         document.addEventListener("DOMContentLoaded", sprawdzStan);
     </script>
 </body>
