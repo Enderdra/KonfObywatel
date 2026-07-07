@@ -128,15 +128,13 @@
         </div>
 
         <div id="documents-container" class="layout-stacked">
-            <!-- Karty będą generowane dynamicznie przez JS -->
-        </div>
+            </div>
         
         <div style="text-align: center; margin-top: 40px; font-size: 11px; color: #999;">
             System ochrony danych oficerów aktywny.<br>Wersja 3.5
         </div>
     </main>
 
-    <!-- DOLNY PASEK -->
     <nav class="bottom-bar">
         <a href="pulpit.html" class="nav-item active">
             <span class="nav-icon">🪪</span>
@@ -157,11 +155,9 @@
     </nav>
 
     <script>
-        // Baza naszych dokumentów/usług
+        // Baza naszych dokumentów/usług (tylko Karta Stałego Konfidenta)
         const defaultDocs = [
-            { id: 'doc1', title: 'Karta Stałego Konfidenta', icon: '🦅', link: 'karta.html', colorClass: 'bg-blue' },
-            { id: 'doc2', title: 'Zgłoś naruszenie zasad', icon: '📢', link: 'zgloszenie.html', colorClass: 'bg-green' },
-            { id: 'doc3', title: 'Tajny Rejestr Zgłoszeń', icon: '🔐', link: 'logi.html', colorClass: 'bg-purple' }
+            { id: 'doc1', title: 'Karta Stałego Konfidenta', icon: '🦅', link: 'karta.html', colorClass: 'bg-blue' }
         ];
 
         // Zmienne stanu
@@ -206,6 +202,7 @@
                 const controls = document.createElement('div');
                 controls.className = 'edit-controls';
                 
+                // Wyświetlanie strzałek tylko jeśli jest więcej niż 1 dokument w tablicy
                 if (index > 0) {
                     const btnUp = document.createElement('button');
                     btnUp.className = 'edit-btn'; btnUp.innerHTML = '↑';
