@@ -2,52 +2,268 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KonfObywatel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Dokumenty - KonfObywatel</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#ffffff">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: #f4f6fa;
+            height: 100vh; display: flex; flex-direction: column;
+            color: #1a1a1c; overflow-x: hidden;
+        }
+
+        /* GÓRNY PASEK */
+        header { 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 20px 20px 10px; background: #f4f6fa; position: sticky; top: 0; z-index: 10;
+        }
+        .header-left { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 18px; color: #cc0000; }
+        .header-icon { font-size: 22px; }
+        .bell-icon { font-size: 22px; color: #1a1a1c; cursor: pointer; }
+
+        /* GŁÓWNA ZAWARTOŚĆ */
+        main { flex: 1; padding: 10px 20px 80px; overflow-y: auto; }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
+        h1 { font-size: 28px; font-weight: 800; }
+        .actions { display: flex; gap: 15px; font-size: 14px; font-weight: 600; color: #0052cc; }
+        .actions span { cursor: pointer; }
+
+        /* KONTENER DOKUMENTÓW */
+        #documents-container { display: flex; gap: 12px; transition: all 0.3s ease; }
+
+        /* UKŁAD 1: KARTY (Stacked) */
+        .layout-stacked { flex-direction: column; }
+        .layout-stacked .doc-card {
+            width: 100%; height: 110px; border-radius: 16px; padding: 20px;
+            color: white; display: flex; flex-direction: column; justify-content: space-between;
+            position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .layout-stacked .doc-title { font-size: 18px; font-weight: 700; max-width: 80%; }
+        .layout-stacked .doc-icon-bg { position: absolute; right: 15px; bottom: 15px; font-size: 24px; opacity: 0.8; }
+        
+        /* UKŁAD 2: SIATKA (Grid) */
+        .layout-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .layout-grid .doc-card {
+            height: 140px; border-radius: 16px; padding: 15px; color: white;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .layout-grid .doc-title { font-size: 15px; font-weight: 700; line-height: 1.2; }
+        .layout-grid .doc-icon-bg { position: absolute; top: 15px; left: 15px; font-size: 24px; opacity: 0.9; }
+
+        /* UKŁAD 3: LISTA (List) */
+        .layout-list { flex-direction: column; }
+        .layout-list .doc-card {
+            width: 100%; background: white; border-radius: 16px; padding: 15px;
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+        .layout-list .doc-icon-bg { 
+            width: 45px; height: 35px; border-radius: 8px; display: flex; 
+            align-items: center; justify-content: center; font-size: 18px; color: white;
+        }
+        .layout-list .doc-title { font-size: 16px; font-weight: 600; color: #1a1a1c; flex: 1; }
+
+        /* KARTY - WSPÓLNE */
+        .doc-card { text-decoration: none; transition: transform 0.1s; overflow: hidden; }
+        .doc-card:active { transform: scale(0.98); }
+
+        /* ELEMENTY EDYCJI KOLEJNOŚCI */
+        .edit-controls {
+            display: none; flex-direction: column; gap: 5px; position: absolute;
+            right: 15px; top: 50%; transform: translateY(-50%); z-index: 5;
+        }
+        .edit-btn {
+            background: rgba(255,255,255,0.9); color: #000; border: none; 
+            border-radius: 50%; width: 30px; height: 30px; font-size: 16px; 
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .edit-mode-active .doc-card { pointer-events: none; } /* Blokuje klikanie w linki podczas edycji */
+        .edit-mode-active .edit-controls { display: flex; pointer-events: auto; }
+        .edit-mode-active .doc-icon-bg { opacity: 0.2; } /* Przygasza ikony, by strzałki były widoczne */
+
+        /* DOLNY PASEK NAWIGACYJNY */
+        nav.bottom-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff;
+            border-top: 1px solid #e5e5ea; display: flex; justify-content: space-around;
+            padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 100;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            text-decoration: none; color: #8e8e93; font-size: 10px; font-weight: 600; flex: 1;
+        }
+        .nav-item.active { color: #0052cc; }
+        .nav-icon { font-size: 24px; margin-bottom: 2px; }
+
+        /* KOLORY KART (Gradienty) */
+        .bg-blue { background: linear-gradient(135deg, #1e88e5, #1565c0); }
+        .bg-green { background: linear-gradient(135deg, #43a047, #2e7d32); }
+        .bg-purple { background: linear-gradient(135deg, #8e24aa, #6a1b9a); }
+        .bg-orange { background: linear-gradient(135deg, #fb8c00, #ef6c00); }
+    </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="header">
-            <span style="width:50px"></span>
-            <span>KonfObywatel</span>
-            <span style="width:50px"></span>
-        </div>
-        <div class="content">
-            <div class="section-title">Twoje dokumenty</div>
-            <div class="menu-list">
-                <a href="karta.html" class="menu-item">
-                    <span class="icon">🦅</span>
-                    <span>Karta Stałego Konfidenta</span>
-                </a>
-            </div>
 
-            <div class="section-title">Usługi</div>
-            <div class="menu-list">
-                <a href="zgloszenie.html" class="menu-item">
-                    <span class="icon">📢</span>
-                    <span>Zgłoś naruszenie zasad</span>
-                </a>
-                <a href="logi.html" class="menu-item">
-                    <span class="icon">🔐</span>
-                    <span>Tajny Rejestr Zgłoszeń</span>
-                </a>
-            </div>
-            
-            <div style="text-align: center; margin-top: 30px; font-size: 0.7rem; color: #999;">
-                Aplikacja satyryczna - KonfObywatel v3.5<br>
-                System ochrony danych oficerów aktywny.
+    <header>
+        <div class="header-left">
+            <span class="header-icon">🦅</span>
+            <span>KonfObywatel</span>
+        </div>
+        <div class="bell-icon">🔔</div>
+    </header>
+
+    <main>
+        <div class="page-header">
+            <h1>Dokumenty</h1>
+            <div class="actions">
+                <span onclick="zmienUklad()" id="btn-uklad">Układ</span>
+                <span onclick="toggleEdycja()" id="btn-edytuj">Dostosuj</span>
             </div>
         </div>
-    </div>
+
+        <div id="documents-container" class="layout-stacked">
+            <!-- Karty będą generowane dynamicznie przez JS -->
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px; font-size: 11px; color: #999;">
+            System ochrony danych oficerów aktywny.<br>Wersja 3.5
+        </div>
+    </main>
+
+    <!-- DOLNY PASEK -->
+    <nav class="bottom-bar">
+        <a href="pulpit.html" class="nav-item active">
+            <span class="nav-icon">🪪</span>
+            <span>Dokumenty</span>
+        </a>
+        <a href="zgloszenie.html" class="nav-item">
+            <span class="nav-icon">📁</span>
+            <span>Usługi</span>
+        </a>
+        <a href="#" class="nav-item" onclick="alert('Moduł skanera QR w przygotowaniu!')">
+            <span class="nav-icon">🔲</span>
+            <span>Kod QR</span>
+        </a>
+        <a href="logi.html" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span>Więcej</span>
+        </a>
+    </nav>
+
     <script>
+        // Baza naszych dokumentów/usług
+        const defaultDocs = [
+            { id: 'doc1', title: 'Karta Stałego Konfidenta', icon: '🦅', link: 'karta.html', colorClass: 'bg-blue' },
+            { id: 'doc2', title: 'Zgłoś naruszenie zasad', icon: '📢', link: 'zgloszenie.html', colorClass: 'bg-green' },
+            { id: 'doc3', title: 'Tajny Rejestr Zgłoszeń', icon: '🔐', link: 'logi.html', colorClass: 'bg-purple' }
+        ];
+
+        // Zmienne stanu
+        let currentLayout = localStorage.getItem('konf_layout') || 'layout-stacked';
+        let docsOrder = JSON.parse(localStorage.getItem('konf_order')) || defaultDocs.map(d => d.id);
+        let isEditMode = false;
+
+        const container = document.getElementById('documents-container');
+        const btnEdytuj = document.getElementById('btn-edytuj');
+
+        // FUNKCJA Rysująca dokumenty na ekranie
+        function renderDocs() {
+            container.className = currentLayout;
+            if (isEditMode) container.classList.add('edit-mode-active');
+            else container.classList.remove('edit-mode-active');
+
+            container.innerHTML = '';
+
+            docsOrder.forEach((docId, index) => {
+                const docData = defaultDocs.find(d => d.id === docId);
+                if (!docData) return;
+
+                // Budowa karty HTML
+                const card = document.createElement('a');
+                card.href = docData.link;
+                card.className = `doc-card ${currentLayout === 'layout-list' ? '' : docData.colorClass}`;
+                
+                // Zawartość w zależności od układu
+                if(currentLayout === 'layout-list') {
+                    card.innerHTML = `
+                        <div class="doc-icon-bg ${docData.colorClass}">${docData.icon}</div>
+                        <div class="doc-title">${docData.title}</div>
+                    `;
+                } else {
+                    card.innerHTML = `
+                        <div class="doc-title">${docData.title}</div>
+                        <div class="doc-icon-bg">${docData.icon}</div>
+                    `;
+                }
+
+                // Dodanie przycisków edycji (Strzałki góra/dół)
+                const controls = document.createElement('div');
+                controls.className = 'edit-controls';
+                
+                if (index > 0) {
+                    const btnUp = document.createElement('button');
+                    btnUp.className = 'edit-btn'; btnUp.innerHTML = '↑';
+                    btnUp.onclick = (e) => { e.preventDefault(); e.stopPropagation(); moveItem(index, -1); };
+                    controls.appendChild(btnUp);
+                }
+                if (index < docsOrder.length - 1) {
+                    const btnDown = document.createElement('button');
+                    btnDown.className = 'edit-btn'; btnDown.innerHTML = '↓';
+                    btnDown.onclick = (e) => { e.preventDefault(); e.stopPropagation(); moveItem(index, 1); };
+                    controls.appendChild(btnDown);
+                }
+                
+                card.appendChild(controls);
+                container.appendChild(card);
+            });
+        }
+
+        // Zmiana układu (Pętlą: Stacked -> Grid -> List)
+        function zmienUklad() {
+            if (currentLayout === 'layout-stacked') currentLayout = 'layout-grid';
+            else if (currentLayout === 'layout-grid') currentLayout = 'layout-list';
+            else currentLayout = 'layout-stacked';
+            
+            localStorage.setItem('konf_layout', currentLayout);
+            renderDocs();
+        }
+
+        // Włącz/Wyłącz tryb edycji kolejności
+        function toggleEdycja() {
+            isEditMode = !isEditMode;
+            btnEdytuj.innerText = isEditMode ? "Gotowe" : "Dostosuj";
+            renderDocs();
+        }
+
+        // Przesuwanie elementów w tablicy
+        function moveItem(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex >= 0 && newIndex < docsOrder.length) {
+                // Zamiana miejsc
+                const temp = docsOrder[index];
+                docsOrder[index] = docsOrder[newIndex];
+                docsOrder[newIndex] = temp;
+                
+                localStorage.setItem('konf_order', JSON.stringify(docsOrder));
+                renderDocs();
+            }
+        }
+
+        // Rejestracja Service Workera (PWA)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').catch(err => console.log('Błąd SW: ', err));
             });
         }
+
+        // Inicjalizacja przy pierwszym uruchomieniu
+        document.addEventListener("DOMContentLoaded", renderDocs);
     </script>
 </body>
 </html>
