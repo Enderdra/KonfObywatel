@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Usługi - KonfObywatel</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: #f2f2f7; /* Typowy kolor tła iOS/mObywatel */
+            height: 100vh; display: flex; flex-direction: column;
+            color: #1a1a1c; overflow-x: hidden;
+        }
+
+        /* GÓRNY PASEK */
+        header { 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 20px 20px 5px; background: #f2f2f7; position: sticky; top: 0; z-index: 10;
+        }
+        .header-left { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 18px; color: #cc0000; }
+        .header-icon { font-size: 22px; }
+        .bell-icon { font-size: 22px; color: #1a1a1c; cursor: pointer; }
+
+        /* GŁÓWNA ZAWARTOŚĆ */
+        main { flex: 1; padding: 10px 20px 90px; overflow-y: auto; }
+        
+        h1 { font-size: 32px; font-weight: 800; margin-bottom: 15px; }
+
+        /* WYSZUKIWARKA */
+        .search-container {
+            background: #e3e3e8; border-radius: 12px; padding: 10px 15px;
+            display: flex; align-items: center; gap: 10px; margin-bottom: 25px;
+        }
+        .search-container input {
+            border: none; background: transparent; font-size: 16px; width: 100%;
+            outline: none; color: #1a1a1c;
+        }
+        .search-container input::placeholder { color: #8e8e93; }
+
+        /* KATEGORIE I GRUPY USŁUG */
+        .category-header {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            margin-bottom: 10px; padding-left: 5px;
+        }
+        .category-title { font-size: 15px; font-weight: 700; color: #333; }
+        .category-link { font-size: 13px; font-weight: 600; color: #0052cc; cursor: pointer; }
+
+        .service-group {
+            background: #ffffff; border-radius: 16px; margin-bottom: 25px;
+            overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        /* POJEDYNCZA USŁUGA */
+        .service-item {
+            display: flex; align-items: center; padding: 16px 15px;
+            text-decoration: none; color: #1a1a1c; position: relative;
+            background: #ffffff; transition: background 0.2s;
+        }
+        .service-item:active { background: #f9f9f9; }
+        
+        /* Kreska oddzielająca (poza ostatnim elementem) */
+        .service-item:not(:last-child)::after {
+            content: ''; position: absolute; bottom: 0; left: 50px; right: 0;
+            height: 1px; background: #e5e5ea;
+        }
+
+        .service-icon { 
+            font-size: 20px; width: 35px; display: flex; justify-content: flex-start; 
+        }
+        .service-name { flex: 1; font-size: 16px; font-weight: 600; }
+        .service-arrow { color: #c7c7cc; font-size: 18px; font-weight: 600; }
+
+        /* DOLNY PASEK NAWIGACYJNY */
+        nav.bottom-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff;
+            border-top: 1px solid #e5e5ea; display: flex; justify-content: space-around;
+            padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 100;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            text-decoration: none; color: #8e8e93; font-size: 10px; font-weight: 600; flex: 1;
+        }
+        .nav-item.active { color: #0052cc; }
+        .nav-icon { font-size: 24px; margin-bottom: 2px; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <span class="header-icon">🦅</span>
+            <span>KonfObywatel</span>
+        </div>
+        <div class="bell-icon">🔔</div>
+    </header>
+
+    <main>
+        <h1>Usługi</h1>
+
+        <div class="search-container">
+            <span style="color: #8e8e93; font-size: 18px;">🔍</span>
+            <input type="text" placeholder="Szukaj usługi...">
+        </div>
+
+        <div class="category-header">
+            <div class="category-title">Obywatelski Obowiązek</div>
+            <div class="category-link">Dodaj ulubione</div>
+        </div>
+        <div class="service-group">
+            <a href="zgloszenie.html" class="service-item">
+                <div class="service-icon">📢</div>
+                <div class="service-name">Zgłoś naruszenie zasad</div>
+                <div class="service-arrow">›</div>
+            </a>
+            <a href="logi.html" class="service-item">
+                <div class="service-icon">🔐</div>
+                <div class="service-name">Tajny Rejestr Zgłoszeń</div>
+                <div class="service-arrow">›</div>
+            </a>
+            <a href="#" class="service-item" onclick="alert('Weryfikacja majątku sąsiada jest chwilowo przeciążona.')">
+                <div class="service-icon">🚗</div>
+                <div class="service-name">Sąsiad Alert (Zgłoś do US)</div>
+                <div class="service-arrow">›</div>
+            </a>
+            <a href="#" class="service-item" onclick="alert('Twoje punkty lojalnościowe to: 150 (Ranga: Młodszy Kablowacz)')">
+                <div class="service-icon">⭐</div>
+                <div class="service-name">Sygnalista+ (Program zniżek)</div>
+                <div class="service-arrow">›</div>
+            </a>
+        </div>
+
+        <div class="category-header">
+            <div class="category-title">Sprawy Operacyjne</div>
+        </div>
+        <div class="service-group">
+            <a href="#" class="service-item" onclick="alert('Twój donos został zaszyfrowany i zabezpieczony przed skasowaniem.')">
+                <div class="service-icon">🛡️</div>
+                <div class="service-name">Zastrzeż donos</div>
+                <div class="service-arrow">›</div>
+            </a>
+            <a href="#" class="service-item">
+                <div class="service-icon">✍️</div>
+                <div class="service-name">Podpisz lojalkę (Podpis kwal.)</div>
+                <div class="service-arrow">›</div>
+            </a>
+            <a href="#" class="service-item">
+                <div class="service-icon">🕵️‍♂️</div>
+                <div class="service-name">Sprawdź alibi sąsiada</div>
+                <div class="service-arrow">›</div>
+            </a>
+        </div>
+
+        <div class="category-header">
+            <div class="category-title">Lokalny Monitoring</div>
+        </div>
+        <div class="service-group">
+            <a href="#" class="service-item">
+                <div class="service-icon">🔭</div>
+                <div class="service-name">Bezpiecznie w oknie (Streaming)</div>
+                <div class="service-arrow">›</div>
+            </a>
+            <a href="#" class="service-item">
+                <div class="service-icon">👮‍♂️</div>
+                <div class="service-name">E-wizyta u Dzielnicowego</div>
+                <div class="service-arrow">›</div>
+            </a>
+        </div>
+        
+        <div style="text-align: center; margin-top: 10px; font-size: 11px; color: #999;">
+            System ochrony danych oficerów aktywny.<br>Wersja 3.5
+        </div>
+    </main>
+
+    <nav class="bottom-bar">
+        <a href="pulpit.html" class="nav-item">
+            <span class="nav-icon">🪪</span>
+            <span>Dokumenty</span>
+        </a>
+        <a href="uslugi.html" class="nav-item active">
+            <span class="nav-icon">📁</span>
+            <span>Usługi</span>
+        </a>
+        <a href="#" class="nav-item" onclick="alert('Moduł skanera QR w przygotowaniu!')">
+            <span class="nav-icon">🔲</span>
+            <span>Kod QR</span>
+        </a>
+        <a href="logi.html" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span>Więcej</span>
+        </a>
+    </nav>
+
+    <script>
+        // Prosta logika wyszukiwarki (filtrowanie w czasie rzeczywistym)
+        const searchInput = document.querySelector('.search-container input');
+        const serviceItems = document.querySelectorAll('.service-item');
+        const categoryHeaders = document.querySelectorAll('.category-header');
+        const serviceGroups = document.querySelectorAll('.service-group');
+
+        searchInput.addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+
+            serviceItems.forEach(item => {
+                const name = item.querySelector('.service-name').innerText.toLowerCase();
+                if (name.includes(term)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Ukrywanie pustych bloków kategorii
+            serviceGroups.forEach((group, index) => {
+                const visibleItems = group.querySelectorAll('.service-item[style="display: flex;"]');
+                const hasVisibleOriginal = group.querySelectorAll('.service-item:not([style*="display: none"])');
+                
+                if (visibleItems.length === 0 && term !== "") {
+                    group.style.display = 'none';
+                    categoryHeaders[index].style.display = 'none';
+                } else {
+                    group.style.display = 'block';
+                    categoryHeaders[index].style.display = 'flex';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
