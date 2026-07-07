@@ -241,13 +241,19 @@
                     publicKey: {
                         challenge: randomChallenge(),
                         rp: { name: "KonfObywatel", id: window.location.hostname },
-                        user: { id: randomChallenge(), name: "Aplikacja", displayName: "Użytkownik" },
+                        // Zmieniono nazwę na użytkownik@aplikacja
+                        user: { id: randomChallenge(), name: "użytkownik@aplikacja", displayName: "użytkownik@aplikacja" },
                         pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
                         authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required", residentKey: "required" },
                         timeout: 60000, attestation: "none"
                     }
                 });
+                
+                // Zapisanie ID klucza, żeby urządzenie mogło go później konkretnie wyszukać
+                const rawIdArr = Array.from(new Uint8Array(credential.rawId));
+                localStorage.setItem('biometria_id', JSON.stringify(rawIdArr));
                 localStorage.setItem('biometria_aktywna', 'TAK');
+                
                 alert("Logowanie biometryczne dodane pomyślnie!");
                 location.reload();
             } catch (err) {
@@ -258,10 +264,23 @@
         async function zalogujBiometria() {
             try {
                 errorMsg.innerText = "";
+                
+                // Pobieramy ID zapisanego klucza w celu przekazania go do skanera
+                const savedBioId = JSON.parse(localStorage.getItem('biometria_id') || 'null');
+                let allowCredentials = [];
+                
+                if (savedBioId) {
+                    allowCredentials = [{
+                        type: 'public-key',
+                        id: new Uint8Array(savedBioId)
+                    }];
+                }
+
                 const assertion = await navigator.credentials.get({
                     publicKey: {
                         challenge: randomChallenge(),
                         rpId: window.location.hostname,
+                        allowCredentials: allowCredentials, // Nakazuje szukać tego konkretnego klucza
                         userVerification: "required"
                     }
                 });
