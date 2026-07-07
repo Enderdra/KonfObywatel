@@ -2,69 +2,242 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twoja Karta</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Karta Konfidenta - KonfObywatel</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: #f2f2f7;
+            height: 100vh; display: flex; flex-direction: column;
+            color: #1a1a1c; overflow-x: hidden;
+        }
+
+        /* GÓRNY PASEK */
+        header { 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 20px; background: #f2f2f7; position: sticky; top: 0; z-index: 10;
+        }
+        .back-btn { color: #0052cc; text-decoration: none; font-size: 17px; font-weight: 500; display: flex; align-items: center; gap: 5px; }
+        .header-title { font-size: 17px; font-weight: 700; }
+        .help-icon { border: 1.5px solid #1a1a1c; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+
+        /* GŁÓWNA ZAWARTOŚĆ */
+        main { flex: 1; padding: 0 20px 80px; overflow-y: auto; }
+        
+        /* ZEGAR NA GÓRZE */
+        .live-clock { text-align: center; font-size: 12px; color: #666; margin-bottom: 20px; font-weight: 500; }
+
+        /* GŁÓWNA KARTA DO SCREENA */
+        .m-card-wrapper {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            overflow: hidden;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .m-card-content {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%);
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Subtelny wzór wodny (imitacja orła/tła) */
+        .m-card-content::before {
+            content: '🦅'; position: absolute; right: -20px; bottom: -20px; 
+            font-size: 200px; opacity: 0.05; transform: rotate(-15deg); pointer-events: none;
+        }
+
+        .m-card-left { width: 105px; display: flex; flex-direction: column; gap: 15px; z-index: 2; }
+        
+        .photo-box {
+            width: 105px; height: 140px; background: rgba(255,255,255,0.5); 
+            border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; 
+            text-align: center; font-size: 11px; color: #555; cursor: pointer; position: relative;
+        }
+        .photo-box img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        
+        .flags-box { display: flex; flex-direction: column; gap: 5px; }
+        .pl-flag { width: 40px; height: 25px; background: linear-gradient(to bottom, white 50%, #dc143c 50%); border: 1px solid rgba(0,0,0,0.1); border-radius: 3px; }
+        .pl-emblem { font-size: 28px; line-height: 1; filter: grayscale(100%); opacity: 0.8; }
+
+        .m-card-right { flex: 1; display: flex; flex-direction: column; gap: 12px; z-index: 2; }
+        
+        .field { display: flex; flex-direction: column; }
+        .field-input { 
+            background: transparent; border: none; font-size: 16px; font-weight: 800; 
+            color: #1a1a1c; padding: 0; margin-bottom: 2px; outline: none; text-transform: uppercase; width: 100%;
+        }
+        .field-label { font-size: 11px; color: #444; font-weight: 500; }
+
+        .m-card-footer {
+            background: #ffffff; padding: 15px 20px; display: flex; align-items: center; gap: 10px;
+        }
+        .valid-icon {
+            width: 28px; height: 28px; border: 2px solid #16a34a; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; color: #16a34a; font-weight: bold; font-size: 14px;
+        }
+        .valid-text { color: #16a34a; font-weight: 700; font-size: 15px; }
+
+        /* OKRĄGŁE PRZYCISKI AKCJI */
+        .action-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 25px;
+        }
+        .action-item {
+            display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; cursor: pointer;
+        }
+        .action-btn {
+            width: 50px; height: 50px; background: #ffffff; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
+            color: #0052cc; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid #f0f0f0;
+        }
+        .action-label { font-size: 10px; color: #333; font-weight: 500; line-height: 1.2; }
+
+        /* LISTA DANYCH (Biały blok na dole) */
+        .details-block {
+            background: #ffffff; border-radius: 16px; padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); margin-bottom: 20px;
+        }
+        .detail-row {
+            padding: 15px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { font-size: 12px; color: #666; margin-bottom: 4px; }
+        .detail-value { font-size: 16px; font-weight: 700; color: #1a1a1c; }
+        
+        .btn-copy { background: #e0f2fe; color: #0052cc; border: none; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+    </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="header">
-            <a href="pulpit.html" class="back-btn">‹ Wróć</a>
-            <span>Karta Konfidenta</span>
-            <span style="width:50px"></span>
-        </div>
-        <div class="content">
-            
-            <div id="capture-area" class="id-card">
-                <div class="id-title">Karta Stałego Konfidenta</div>
-                
-                <div class="id-grid">
-                    <div>
-                        <label for="img-input" class="photo-box">
-                            <input type="file" id="img-input" hidden accept="image/*">
-                            <span id="label-text">Kliknij<br>aby dodać zdjęcie</span>
-                            <img id="preview" src="" alt="twoje zdjęcie">
-                        </label>
-                        <div class="field">
-                            <div class="field-label">pseudonim</div>
-                            <input type="text" class="field-input" value="Sygnalista">
-                        </div>
-                        <div class="field">
-                            <div class="field-label">imie i nazwisko</div>
-                            <input type="text" class="field-input" value="Janusz Nosacz">
-                        </div>
-                        <div class="field">
-                            <div class="field-label">pakiet</div>
-                            <div class="field-value-text">PLATINUM</div>
-                        </div>
-                    </div>
 
-                    <div>
-                        <div class="symbols-box">
-                            <div class="symbol">🦅</div>
-                            <div class="symbol">👮‍♂️</div>
-                        </div>
-                        <div class="field" style="text-align: right;">
-                            <div class="field-label">ważna do:</div>
-                            <div class="field-value-text">Dożywocie</div>
-                        </div>
-                        <div class="field" style="text-align: right; margin-top: 20px;">
-                            <div class="field-label">Nadane z art.</div>
-                            <div class="field-value-text">ART.60 PAR.1</div>
-                        </div>
+    <header>
+        <a href="pulpit.html" class="back-btn">‹ Wróć</a>
+        <div class="header-title">Karta Konfidenta</div>
+        <div class="help-icon">?</div>
+    </header>
+
+    <main>
+        <!-- Dynamiczny zegar -->
+        <div class="live-clock" id="live-clock">Czas: --:--:-- --.--.----</div>
+
+        <!-- OBSZAR DO POBRANIA (Screena) -->
+        <div id="capture-area" class="m-card-wrapper">
+            <div class="m-card-content">
+                <div class="m-card-left">
+                    <label class="photo-box" for="img-input">
+                        <input type="file" id="img-input" hidden accept="image/*">
+                        <span id="label-text">Wgraj<br>zdjęcie</span>
+                        <img id="preview" src="" alt="Zdjęcie">
+                    </label>
+                    <div class="flags-box">
+                        <div class="pl-flag"></div>
+                        <div class="pl-emblem">🦅</div>
                     </div>
                 </div>
 
-                <div class="police-footer">P O L I C J A</div>
+                <div class="m-card-right">
+                    <div class="field">
+                        <input type="text" class="field-input" value="Sygnalista">
+                        <div class="field-label">Pseudonim (Kryptonim)</div>
+                    </div>
+                    <div class="field">
+                        <input type="text" class="field-input" value="Janusz Nosacz">
+                        <div class="field-label">Imię i nazwisko</div>
+                    </div>
+                    <div class="field">
+                        <input type="text" class="field-input" value="POLSKIE">
+                        <div class="field-label">Obywatelstwo</div>
+                    </div>
+                    <div class="field">
+                        <input type="text" class="field-input" value="PLATINUM">
+                        <div class="field-label">Pakiet zaangażowania</div>
+                    </div>
+                    <div class="field">
+                        <input type="text" class="field-input" value="91071427765">
+                        <div class="field-label">Numer ewidencyjny (PESEL)</div>
+                    </div>
+                </div>
             </div>
-
-            <button class="btn-primary" onclick="downloadID()">Pobierz do galerii (JPG)</button>
+            
+            <div class="m-card-footer">
+                <div class="valid-icon">✓</div>
+                <div class="valid-text">Status: Aktywny Konfident</div>
+            </div>
         </div>
-    </div>
+
+        <!-- PRZYCISKI AKCJI (mDowód style) -->
+        <div class="action-grid">
+            <div class="action-item" onclick="alert('Twoje dane są zsynchronizowane z KG Policji.')">
+                <div class="action-btn">🪪</div>
+                <div class="action-label">Potwierdź<br>status</div>
+            </div>
+            <div class="action-item" onclick="downloadID()">
+                <div class="action-btn">⬇️</div>
+                <div class="action-label">Pobierz<br>Kartę</div>
+            </div>
+            <div class="action-item" onclick="alert('Donos pomyślnie zastrzeżony.')">
+                <div class="action-btn">🛡️</div>
+                <div class="action-label">Zastrzeż<br>Donos</div>
+            </div>
+            <div class="action-item" onclick="alert('Więcej funkcji wkrótce.')">
+                <div class="action-btn">•••</div>
+                <div class="action-label">Pozostałe<br>skróty</div>
+            </div>
+        </div>
+
+        <!-- LISTA SZCZEGÓŁÓW -->
+        <div class="details-block">
+            <div class="detail-row">
+                <div>
+                    <div class="detail-label">Seria i numer karty</div>
+                    <div class="detail-value">KONF 80112</div>
+                </div>
+                <button class="btn-copy" onclick="alert('Skopiowano numer do schowka!')">Kopiuj</button>
+            </div>
+            <div class="detail-row">
+                <div>
+                    <div class="detail-label">Podstawa prawna</div>
+                    <div class="detail-value">Art. 60 § 1 KK</div>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div>
+                    <div class="detail-label">Termin ważności</div>
+                    <div class="detail-value">Dożywotnio</div>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div>
+                    <div class="detail-label">Organ wydający</div>
+                    <div class="detail-value">Wydział ds. Uprzejmie Donoszę</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
 
     <script>
-        // Obsługa wgrywania zdjęcia
+        // --- 1. OBSŁUGA ZEGARA NA GÓRZE ---
+        function updateClock() {
+            const now = new Date();
+            const date = now.toLocaleDateString('pl-PL', {day: '2-digit', month: '2-digit', year: 'numeric'});
+            const time = now.toLocaleTimeString('pl-PL');
+            document.getElementById('live-clock').innerText = `Czas: ${time} ${date}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock(); // Pierwsze wywołanie od razu
+
+        // --- 2. OBSŁUGA WGRYWANIA ZDJĘCIA ---
         const input = document.getElementById('img-input');
         input.onchange = e => {
             const [file] = input.files;
@@ -75,14 +248,16 @@
             }
         }
 
-        // Obsługa pobierania karty
+        // --- 3. OBSŁUGA POBIERANIA KARTY (SCREEN) ---
         function downloadID() {
-            // Ukrywamy ewentualne migające kursory w inputach przed zrobieniem screena
+            // Ukrywamy kursory w polach tekstowych przed zrobieniem screena
             document.activeElement.blur(); 
             
+            // html2canvas generuje obrazek tylko ze wskazanego elementu div (karty)
             html2canvas(document.getElementById('capture-area'), {
-                scale: 2, // Lepsza jakość obrazka
-                backgroundColor: null
+                scale: 3, // Wysoka jakość, by tekst był ostry
+                backgroundColor: null,
+                useCORS: true
             }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = 'karta-konfidenta.jpg';
