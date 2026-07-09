@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aktywacja - KonfObywatel</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: #f2f2f7; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #1a1a1c; padding: 20px; }
+        
+        .card { background: #ffffff; border-radius: 20px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04); text-align: center; }
+        h1 { font-size: 24px; font-weight: 800; margin-bottom: 10px; }
+        p { font-size: 14px; color: #666; margin-bottom: 25px; }
+        
+        input { width: 100%; padding: 16px; font-size: 16px; border: 1px solid #d1d5db; border-radius: 12px; margin-bottom: 15px; outline: none; text-align: center; text-transform: uppercase; font-weight: 700; letter-spacing: 2px; }
+        input:focus { border-color: #0052cc; }
+        
+        button { width: 100%; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; border: none; background: #0052cc; color: white; transition: 0.2s; }
+        button:active { background: #0040a0; }
+        
+        #msg { margin-top: 15px; font-size: 13px; font-weight: 600; min-height: 20px; }
+        .error { color: #d32f2f; }
+        .success { color: #16a34a; }
+    </style>
+
+    <script>
+        // 0. BRAMKA STARTOWA - Zanim strona się w ogóle narysuje, sprawdzamy status
+        if (localStorage.getItem('urzadzenie_autoryzowane') === 'TAK') {
+            window.location.replace('login.html'); // Przenosi prosto do logowania
+        }
+    </script>
+</head>
+<body>
+
+    <div class="card">
+        <div style="font-size: 40px; margin-bottom: 10px;">🦅</div>
+        <h1>Aktywacja Systemu</h1>
+        <p>Wprowadź unikalny klucz licencyjny, aby powiązać to urządzenie z bazą centralną.</p>
+
+        <input type="text" id="klucz" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19">
+        <button onclick="aktywujUrzadzenie()" id="btn-aktywuj">Zweryfikuj klucz</button>
+        <div id="msg"></div>
+    </div>
+
+    <script>
+        // 1. FORMATOWANIE POLA TEKSTOWEGO NA BIEŻĄCO
+        const kluczInput = document.getElementById('klucz');
+        kluczInput.addEventListener('input', function(e) {
+            let target = e.target;
+            let val = target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+            let newString = '';
+            for (let i = 0; i < val.length; i++) {
+                if (i > 0 && i % 4 === 0) {
+                    newString += '-';
+                }
+                newString += val[i];
+            }
+            target.value = newString;
+        });
+
+        // 2. KONFIGURACJA FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I",
+            authDomain: "konfobywatel-331d6.firebaseapp.com",
+            databaseURL: "https://konfobywatel-331d6-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "konfobywatel-331d6",
+            storageBucket: "konfobywatel-331d6.firebasestorage.app",
+            messagingSenderId: "695478312817",
+            appId: "1:695478312817:web:41ef61675267dd936da0d0",
+            measurementId: "G-HE1H1FKJMR"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const database = firebase.database();
+
+        // 3. LOGIKA AKTYWACJI
+        function aktywujUrzadzenie() {
+            const klucz = document.getElementById('klucz').value.trim();
+            const msgBox = document.getElementById('msg');
+            const btn = document.getElementById('btn-aktywuj');
+
+            // Regex sprawdzający dokładny format: 4 bloki po 4 znaki
+            const regexKlucza = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+
+            if (!regexKlucza.test(klucz)) {
+                msgBox.className = 'error';
+                msgBox.innerText = "Nieprawidłowy format klucza! (Oczekiwany: XXXX-XXXX-XXXX-XXXX)";
+                return;
+            }
+
+            msgBox.className = '';
+            msgBox.style.color = '#666';
+            msgBox.innerText = "Sprawdzanie w bazie centralnej...";
+            btn.disabled = true;
+
+            // Wyszukiwanie klucza w bazie
+            database.ref('klucze/' + klucz).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const daneKlucza = snapshot.val();
+                    
+                    if (daneKlucza.aktywny === true) {
+                        msgBox.className = 'success';
+                        msgBox.innerText = "Aktywacja pomyślna! Ładowanie systemu...";
+                        
+                        // Zapisanie statusu
+                        localStorage.setItem('urzadzenie_autoryzowane', 'TAK');
+                        localStorage.setItem('licencja_id', klucz);
+                        
+                        // Przejście do logowania po 1 sekundzie
+                        setTimeout(() => {
+                            window.location.replace('login.html');
+                        }, 1000);
+
+                    } else {
+                        msgBox.className = 'error';
+                        msgBox.innerText = "Odmowa dostępu. Ten klucz został zablokowany lub zużyty.";
+                        btn.disabled = false;
+                    }
+                } else {
+                    msgBox.className = 'error';
+                    msgBox.innerText = "Nie znaleziono takiego klucza w rejestrze centralnym.";
+                    btn.disabled = false;
+                }
+            }).catch((error) => {
+                msgBox.className = 'error';
+                msgBox.innerText = "Błąd połączenia z serwerem. Sprawdź internet.";
+                console.error(error);
+                btn.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>
