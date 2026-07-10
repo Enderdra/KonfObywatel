@@ -27,15 +27,15 @@ body { background-color: #333; display: flex; justify-content: center; min-heigh
 .section-title { font-size: 13px; color: #6e6e73; text-transform: uppercase; margin: 20px 0 8px 4px; font-weight: 500; }
 
 /* --- Menu Styl --- */
-.menu-list { background: #fff; border-radius: 12px; overflow: hidden; }
+.menu-list { background: var(--card-bg); border-radius: 12px; overflow: hidden; }
 .menu-item {
-    display: flex; align-items: center; padding: 16px; border-bottom: 1px solid #f2f2f7;
-    text-decoration: none; color: var(--text-main); transition: 0.2s;
+    display: flex; align-items: center; padding: 16px; border-bottom: 1px solid var(--bg-color);
+    text-decoration: none; color: var(--text-main); transition: 0.2s; background: var(--card-bg);
 }
 .menu-item:active { background: #f2f2f7; }
 .menu-item .icon { font-size: 24px; margin-right: 16px; }
 
-/* --- Karta Konfidenta (Wersja klasyczna z CSS) --- */
+/* --- Karta Konfidenta --- */
 .id-card {
     background: linear-gradient(135deg, #e0eaf5 0%, #c1d5e0 100%);
     border-radius: 12px; padding: 15px;
@@ -49,7 +49,7 @@ body { background-color: #333; display: flex; justify-content: center; min-heigh
 .id-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
 .photo-box {
-    background-color: white; height: 140px; border: 2px dashed #ccc;
+    background-color: var(--card-bg); height: 140px; border: 2px dashed #ccc;
     display: flex; justify-content: center; align-items: center;
     color: #999; font-size: 0.8rem; text-align: center;
     overflow: hidden; position: relative; cursor: pointer;
@@ -65,7 +65,7 @@ body { background-color: #333; display: flex; justify-content: center; min-heigh
 .field { margin-top: 10px; }
 .field-label { font-size: 0.75rem; font-weight: bold; font-style: italic; }
 .field-input { 
-    background: white; border: none; padding: 5px; width: 100%; 
+    background: var(--card-bg); border: none; padding: 5px; width: 100%; 
     font-weight: bold; margin-top: 3px; font-family: inherit; font-size: 14px;
 }
 .field-value-text { font-weight: bold; font-size: 0.9rem; margin-top: 3px; }
@@ -76,7 +76,7 @@ body { background-color: #333; display: flex; justify-content: center; min-heigh
 }
 
 /* --- Formularz zgłoszenia --- */
-.form-group { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+.form-group { background: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
 .form-group label { display: block; font-size: 12px; color: #6e6e73; margin-bottom: 4px; }
 .form-group input, .form-group textarea, .form-group select {
     width: 100%; border: none; outline: none; font-size: 16px; padding: 4px 0; font-family: inherit; background: transparent;
@@ -88,8 +88,7 @@ body { background-color: #333; display: flex; justify-content: center; min-heigh
     border: none; border-radius: 12px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 10px;
 }
 
-/* --- DARK MODE (Dodatek) --- */
-
+/* --- DARK MODE --- */
 body.dark-mode {
     --bg-color: #000000;
     --header-bg: #1c1c1e;
@@ -102,17 +101,11 @@ body.dark-mode .header { background-color: var(--header-bg); border-bottom-color
 body.dark-mode .menu-list { background: var(--card-bg); }
 body.dark-mode .menu-item { color: var(--text-main); border-bottom-color: #3a3a3c; }
 body.dark-mode .menu-item:active { background: #2c2c2e; }
-
-body.dark-mode .id-card {
-    background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%);
-    border-color: #444; color: #fff;
-}
+body.dark-mode .id-card { background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%); border-color: #444; color: #fff; }
 body.dark-mode .field-input { background: #3a3a3c; color: #fff; }
 body.dark-mode .photo-box { background: #2c2c2e; border-color: #444; }
-
 body.dark-mode .form-group { background: #1c1c1e; color: #fff; }
 body.dark-mode .form-group input, 
 body.dark-mode .form-group textarea, 
 body.dark-mode .form-group select { color: #fff; }
-
 body.dark-mode { background-color: #000; }
