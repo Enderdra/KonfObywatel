@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'enabled') {
+            document.documentElement.classList.add('dark-mode');
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Usługi - KonfObywatel</title>
