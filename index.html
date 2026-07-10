@@ -30,37 +30,6 @@
     </style>
 
     <script>
-        const tlumania = {
-    "pl": {
-        "greeting": "Dzień dobry!",
-        "login_btn": "Zaloguj się",
-        "password": "Hasło",
-        "settings": "Ustawienia"
-    },
-    "en": {
-        "greeting": "Good morning!",
-        "login_btn": "Log in",
-        "password": "Password",
-        "settings": "Settings"
-    }
-};
-
-// Funkcja zmieniająca język
-function zmienJezyk(kodJezyka) {
-    localStorage.setItem('preferowany_jezyk', kodJezyka);
-    zastosujTlumania(kodJezyka);
-}
-
-// Funkcja podmieniająca napisy na stronie
-function zastosujTlumania(kod) {
-    const data = tlumania[kod];
-    if (!data) return;
-    
-    // Zakładając, że Twoje elementy mają odpowiednie ID
-    if(document.getElementById('greeting-text')) document.getElementById('greeting-text').innerText = data.greeting;
-    if(document.getElementById('btn-main-action')) document.getElementById('btn-main-action').innerText = data.login_btn;
-    // ... i tak dalej dla każdego elementu
-}
         // 0. BRAMKA STARTOWA - Zanim strona się w ogóle narysuje, sprawdzamy status
         if (localStorage.getItem('urzadzenie_autoryzowane') === 'TAK') {
             window.location.replace('login.html'); // Przenosi prosto do logowania
