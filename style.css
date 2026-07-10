@@ -87,3 +87,32 @@ body { background-color: #333; display: flex; justify-content: center; min-heigh
     display: block; width: 100%; padding: 16px; background: var(--text-blue); color: white;
     border: none; border-radius: 12px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 10px;
 }
+
+/* --- DARK MODE (Dodatek) --- */
+
+body.dark-mode {
+    --bg-color: #000000;
+    --header-bg: #1c1c1e;
+    --text-main: #ffffff;
+    --card-bg: #1c1c1e;
+}
+
+body.dark-mode .app-container { background-color: var(--bg-color); }
+body.dark-mode .header { background-color: var(--header-bg); border-bottom-color: #3a3a3c; color: var(--text-main); }
+body.dark-mode .menu-list { background: var(--card-bg); }
+body.dark-mode .menu-item { color: var(--text-main); border-bottom-color: #3a3a3c; }
+body.dark-mode .menu-item:active { background: #2c2c2e; }
+
+body.dark-mode .id-card {
+    background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%);
+    border-color: #444; color: #fff;
+}
+body.dark-mode .field-input { background: #3a3a3c; color: #fff; }
+body.dark-mode .photo-box { background: #2c2c2e; border-color: #444; }
+
+body.dark-mode .form-group { background: #1c1c1e; color: #fff; }
+body.dark-mode .form-group input, 
+body.dark-mode .form-group textarea, 
+body.dark-mode .form-group select { color: #fff; }
+
+body.dark-mode { background-color: #000; }
