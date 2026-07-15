@@ -94,7 +94,7 @@
         }
         const database = firebase.database();
 
-        // 3. LOGIKA AKTYWACJI (Zaktualizowana)
+        // 3. LOGIKA AKTYWACJI (Zaktualizowana o jednorazowość klucza)
         function aktywujUrzadzenie() {
             const nick = document.getElementById('nick').value.trim();
             const klucz = document.getElementById('klucz').value.trim();
@@ -129,7 +129,7 @@
                     // KROK 1: Sprawdzenie, czy klucz jest aktywny
                     if (daneKlucza.aktywny !== true) {
                         msgBox.className = 'error';
-                        msgBox.innerText = "Odmowa dostępu. Ten klucz został zablokowany lub zużyty.";
+                        msgBox.innerText = "Odmowa dostępu. Ten klucz został zablokowany.";
                         btn.disabled = false;
                         return;
                     }
@@ -142,19 +142,35 @@
                         return;
                     }
 
-                    // Jeśli Nick i Klucz się zgadzają:
+                    // KROK 3: Sprawdzenie, czy klucz nie został już zużyty
+                    if (daneKlucza.wykorzystany === true) {
+                        msgBox.className = 'error';
+                        msgBox.innerText = "Odmowa dostępu. Ten klucz został już wykorzystany na innym urządzeniu!";
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    // Jeśli wszystko się zgadza:
                     msgBox.className = 'success';
                     msgBox.innerText = "Weryfikacja pomyślna! Ładowanie systemu...";
                     
-                    // Zapisanie statusu w pamięci urządzenia (teraz zapisujemy też nick!)
-                    localStorage.setItem('urzadzenie_autoryzowane', 'TAK');
-                    localStorage.setItem('licencja_id', klucz);
-                    localStorage.setItem('uzytkownik_nick', nick); 
-                    
-                    // Przejście do logowania po 1 sekundzie
-                    setTimeout(() => {
-                        window.location.replace('login.html');
-                    }, 1000);
+                    // OZNACZENIE KLUCZA JAKO ZUŻYTY W BAZIE FIREBASE
+                    database.ref('klucze/' + klucz).update({ wykorzystany: true }).then(() => {
+                        // Zapisanie statusu w pamięci urządzenia
+                        localStorage.setItem('urzadzenie_autoryzowane', 'TAK');
+                        localStorage.setItem('licencja_id', klucz);
+                        localStorage.setItem('uzytkownik_nick', nick); 
+                        
+                        // Przejście do logowania po 1 sekundzie
+                        setTimeout(() => {
+                            window.location.replace('login.html');
+                        }, 1000);
+                    }).catch((error) => {
+                        msgBox.className = 'error';
+                        msgBox.innerText = "Błąd zapisu w bazie. Spróbuj ponownie.";
+                        btn.disabled = false;
+                        console.error(error);
+                    });
 
                 } else {
                     msgBox.className = 'error';
