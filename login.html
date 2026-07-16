@@ -14,7 +14,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Logowanie - KonfObywatel</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
@@ -144,7 +143,48 @@
         <div class="version">wersja 4.50.0 (18)</div>
     </footer>
 
+    <!-- DODANE BIBLIOTEKI FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <script>
+        // --- 1. KONFIGURACJA I STRAŻNIK FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I",
+            authDomain: "konfobywatel-331d6.firebaseapp.com",
+            databaseURL: "https://konfobywatel-331d6-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "konfobywatel-331d6",
+            storageBucket: "konfobywatel-331d6.firebasestorage.app",
+            messagingSenderId: "695478312817",
+            appId: "1:695478312817:web:41ef61675267dd936da0d0"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const database = firebase.database();
+
+        const aktywnaLicencja = localStorage.getItem('licencja_id');
+
+        if (!aktywnaLicencja) {
+            // Jeśli ktoś ominął index.html i wszedł bez klucza - wyrzucamy do aktywacji
+            window.location.replace('index.html');
+        } else {
+            // Nasłuch w czasie rzeczywistym
+            database.ref('klucze/' + aktywnaLicencja).on('value', (snapshot) => {
+                if (!snapshot.exists() || snapshot.val().aktywny !== true) {
+                    // Blokada! Czyszczenie najważniejszych poświadczeń
+                    localStorage.removeItem('urzadzenie_autoryzowane');
+                    localStorage.removeItem('licencja_id');
+                    localStorage.removeItem('uzytkownik_nick');
+                    
+                    alert("UWAGA! Twoja licencja operacyjna została unieważniona przez Dowództwo.");
+                    window.location.replace('index.html');
+                }
+            });
+        }
+        // --- KONIEC STRAŻNIKA ---
+
         function randomChallenge() { return crypto.getRandomValues(new Uint8Array(32)); }
 
         // Elementy UI
