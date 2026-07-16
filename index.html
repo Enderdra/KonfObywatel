@@ -2,6 +2,7 @@
 <html lang="pl">
 <head>
     <script>
+        // Sprawdzanie trybu ciemnego (pozostawione bez zmian)
         if (localStorage.getItem('dark-mode') === 'enabled') {
             document.documentElement.classList.add('dark-mode');
             document.body.classList.add('dark-mode');
@@ -25,27 +26,20 @@
         h1 { font-size: 24px; font-weight: 800; margin-bottom: 10px; }
         p { font-size: 14px; color: #666; margin-bottom: 25px; }
         
-        /* Główne style dla pól tekstowych */
-        input { width: 100%; padding: 16px; font-size: 16px; border: 1px solid #d1d5db; border-radius: 12px; margin-bottom: 15px; outline: none; text-align: center; font-weight: 700; }
+        input { width: 100%; padding: 16px; font-size: 16px; border: 1px solid #d1d5db; border-radius: 12px; margin-bottom: 15px; outline: none; text-align: center; font-weight: 700; transition: 0.2s; }
         input:focus { border-color: #0052cc; }
+        input:disabled { background: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
         
-        /* Specyficzny styl tylko dla klucza */
         #klucz { text-transform: uppercase; letter-spacing: 2px; }
         
         button { width: 100%; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; border: none; background: #0052cc; color: white; transition: 0.2s; }
         button:active { background: #0040a0; }
+        button:disabled { background: #9ca3af; cursor: not-allowed; }
         
         #msg { margin-top: 15px; font-size: 13px; font-weight: 600; min-height: 20px; }
         .error { color: #d32f2f; }
         .success { color: #16a34a; }
     </style>
-
-    <script>
-        // 0. BRAMKA STARTOWA
-        if (localStorage.getItem('urzadzenie_autoryzowane') === 'TAK') {
-            window.location.replace('login.html'); 
-        }
-    </script>
 </head>
 <body>
 
@@ -94,21 +88,74 @@
         }
         const database = firebase.database();
 
-        // 3. LOGIKA AKTYWACJI (Zaktualizowana o jednorazowość klucza)
-        function aktywujUrzadzenie() {
-            const nick = document.getElementById('nick').value.trim();
-            const klucz = document.getElementById('klucz').value.trim();
-            const msgBox = document.getElementById('msg');
-            const btn = document.getElementById('btn-aktywuj');
+        // --- NOWOŚĆ: 3. ZAAWANSOWANA BRAMKA WERYFIKACYJNA NA ŻYWO ---
+        const zapisanyKlucz = localStorage.getItem('licencja_id');
+        const zapisanyNick = localStorage.getItem('uzytkownik_nick');
+        const poleNick = document.getElementById('nick');
+        const poleKlucz = document.getElementById('klucz');
+        const btnAktywuj = document.getElementById('btn-aktywuj');
+        const msgBox = document.getElementById('msg');
 
-            // Walidacja Nicku
+        if (zapisanyKlucz && zapisanyNick) {
+            // Urządzenie ma zapisaną licencję - blokujemy interfejs i pytamy serwer
+            poleNick.disabled = true;
+            poleKlucz.disabled = true;
+            btnAktywuj.disabled = true;
+            poleNick.value = zapisanyNick;
+            poleKlucz.value = zapisanyKlucz;
+            
+            msgBox.style.color = '#0052cc';
+            msgBox.innerText = "Synchronizacja ze Sztabem Głównym...";
+
+            database.ref('klucze/' + zapisanyKlucz).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const daneKlucza = snapshot.val();
+                    
+                    if (daneKlucza.aktywny === true && daneKlucza.nick === zapisanyNick) {
+                        // Licencja jest ważna i nick się zgadza - wpuszczamy do środka!
+                        window.location.replace('login.html');
+                    } else {
+                        // Licencja zablokowana przez Admina lub zmieniono Nick w panelu
+                        WyczyscDostep("Odmowa dostępu! Twoja licencja została zablokowana lub unieważniona przez Dowództwo.");
+                    }
+                } else {
+                    // Klucz został całkowicie usunięty z bazy
+                    WyczyscDostep("Błąd krytyczny. Licencja została trwale usunięta z bazy głównej.");
+                }
+            }).catch((error) => {
+                msgBox.className = 'error';
+                msgBox.innerText = "Brak połączenia z centralą. Wymagany internet do weryfikacji.";
+                console.error(error);
+                // Nie czyścimy kluczy, czekamy aż użytkownik odzyska internet
+            });
+        }
+
+        function WyczyscDostep(komunikat) {
+            localStorage.removeItem('urzadzenie_autoryzowane');
+            localStorage.removeItem('licencja_id');
+            localStorage.removeItem('uzytkownik_nick');
+            
+            poleNick.disabled = false;
+            poleKlucz.disabled = false;
+            btnAktywuj.disabled = false;
+            poleNick.value = '';
+            poleKlucz.value = '';
+            
+            msgBox.className = 'error';
+            msgBox.innerText = komunikat;
+        }
+
+        // 4. LOGIKA NOWEJ AKTYWACJI (Dla świeżych urządzeń)
+        function aktywujUrzadzenie() {
+            const nick = poleNick.value.trim();
+            const klucz = poleKlucz.value.trim();
+
             if (!nick) {
                 msgBox.className = 'error';
                 msgBox.innerText = "Musisz podać swój unikalny nick!";
                 return;
             }
 
-            // Walidacja formatu Klucza
             const regexKlucza = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
             if (!regexKlucza.test(klucz)) {
                 msgBox.className = 'error';
@@ -119,69 +166,60 @@
             msgBox.className = '';
             msgBox.style.color = '#666';
             msgBox.innerText = "Sprawdzanie w bazie centralnej...";
-            btn.disabled = true;
+            btnAktywuj.disabled = true;
 
-            // Wyszukiwanie klucza w bazie
             database.ref('klucze/' + klucz).once('value').then((snapshot) => {
                 if (snapshot.exists()) {
                     const daneKlucza = snapshot.val();
                     
-                    // KROK 1: Sprawdzenie, czy klucz jest aktywny
                     if (daneKlucza.aktywny !== true) {
                         msgBox.className = 'error';
                         msgBox.innerText = "Odmowa dostępu. Ten klucz został zablokowany.";
-                        btn.disabled = false;
+                        btnAktywuj.disabled = false;
                         return;
                     }
 
-                    // KROK 2: Weryfikacja Nicku (Wielkość liter ma znaczenie)
                     if (daneKlucza.nick !== nick) {
                         msgBox.className = 'error';
                         msgBox.innerText = "Błąd autoryzacji! Podany Nick nie jest przypisany do tego klucza.";
-                        btn.disabled = false;
+                        btnAktywuj.disabled = false;
                         return;
                     }
 
-                    // KROK 3: Sprawdzenie, czy klucz nie został już zużyty
                     if (daneKlucza.wykorzystany === true) {
                         msgBox.className = 'error';
                         msgBox.innerText = "Odmowa dostępu. Ten klucz został już wykorzystany na innym urządzeniu!";
-                        btn.disabled = false;
+                        btnAktywuj.disabled = false;
                         return;
                     }
 
-                    // Jeśli wszystko się zgadza:
                     msgBox.className = 'success';
                     msgBox.innerText = "Weryfikacja pomyślna! Ładowanie systemu...";
                     
-                    // OZNACZENIE KLUCZA JAKO ZUŻYTY W BAZIE FIREBASE
+                    // Oznacz jako wykorzystany
                     database.ref('klucze/' + klucz).update({ wykorzystany: true }).then(() => {
-                        // Zapisanie statusu w pamięci urządzenia
                         localStorage.setItem('urzadzenie_autoryzowane', 'TAK');
                         localStorage.setItem('licencja_id', klucz);
                         localStorage.setItem('uzytkownik_nick', nick); 
                         
-                        // Przejście do logowania po 1 sekundzie
                         setTimeout(() => {
                             window.location.replace('login.html');
                         }, 1000);
                     }).catch((error) => {
                         msgBox.className = 'error';
                         msgBox.innerText = "Błąd zapisu w bazie. Spróbuj ponownie.";
-                        btn.disabled = false;
-                        console.error(error);
+                        btnAktywuj.disabled = false;
                     });
 
                 } else {
                     msgBox.className = 'error';
                     msgBox.innerText = "Nie znaleziono takiego klucza w rejestrze centralnym.";
-                    btn.disabled = false;
+                    btnAktywuj.disabled = false;
                 }
             }).catch((error) => {
                 msgBox.className = 'error';
                 msgBox.innerText = "Błąd połączenia z serwerem. Sprawdź internet.";
-                console.error(error);
-                btn.disabled = false;
+                btnAktywuj.disabled = false;
             });
         }
     </script>
