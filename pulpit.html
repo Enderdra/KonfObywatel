@@ -1,152 +1,57 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <script>
-        if (localStorage.getItem('dark-mode') === 'enabled') {
-            document.documentElement.classList.add('dark-mode');
-            document.body.classList.add('dark-mode');
-        }
-    </script>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Pulpit - KonfObywatel</title>
-    
-    <!-- FIREBASE SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        
-        body { background-color: #f4f6fa; height: 100vh; display: flex; flex-direction: column; color: #1a1a1c; overflow-x: hidden; }
-
-        /* STATUS OPERACYJNY */
-        .status-card { background: #fff; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; }
-        .status-val { font-size: 20px; font-weight: 800; color: #0052cc; margin-top: 5px; }
-
-        /* MODAL ALERTU */
-        #alert-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 100%; max-width: 400px; }
-        .modal-content h2 { color: #cc0000; margin-bottom: 15px; }
-        .btn-ack { background: #cc0000; color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 20px; }
-
-        /* PANIKA */
-        .panic-section { margin-top: 20px; padding: 20px; text-align: center; }
-        .btn-panic { background: #ef4444; color: white; border: none; padding: 15px 30px; border-radius: 30px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px; margin: 0 auto; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); }
-
-        /* DOKUMENTY */
-        header { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 10px; background: #f4f6fa; position: sticky; top: 0; z-index: 10; }
-        .header-left { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 18px; color: #cc0000; }
-        main { flex: 1; padding: 10px 20px 80px; overflow-y: auto; }
-        #documents-container { display: flex; gap: 12px; transition: all 0.3s ease; flex-direction: column; }
-        .doc-card { width: 100%; height: 110px; border-radius: 16px; padding: 20px; color: white; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-decoration: none; }
-        .doc-title { font-size: 18px; font-weight: 700; max-width: 80%; }
-        .doc-icon-bg { position: absolute; right: 15px; bottom: 15px; font-size: 24px; opacity: 0.8; }
-        .bg-blue { background: linear-gradient(135deg, #1e88e5, #1565c0); }
-        
-        nav.bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; border-top: 1px solid #e5e5ea; display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #8e8e93; font-size: 10px; font-weight: 600; flex: 1; }
-        .nav-item.active { color: #0052cc; }
-        .nav-icon { font-size: 24px; }
+        body { font-family: 'Inter', sans-serif; background: #f4f6fa; padding: 20px; color: #1a1a1c; }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; margin-bottom: 20px; }
+        .doc-card { width: 100%; height: 110px; border-radius: 16px; padding: 20px; color: white; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 10px; text-decoration: none; background: linear-gradient(135deg, #1e88e5, #1565c0); }
+        .btn-panic { background: #ef4444; color: white; padding: 15px 30px; border-radius: 30px; border:none; cursor: pointer; font-weight: 800; }
+        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #ddd; }
     </style>
 </head>
 <body>
-
-    <header>
-        <div class="header-left"><span class="header-icon">🦅</span><span>KonfObywatel</span></div>
-    </header>
-
-    <main>
-        <!-- STATUS -->
-        <div class="status-card">
-            <h3 style="font-size: 12px; color: #666;">STATUS OPERACYJNY</h3>
-            <div id="status-display" class="status-val">Wczytywanie...</div>
+    <div id="main-content" style="display:none;">
+        <div class="card">
+            <h3>STATUS OPERACYJNY</h3>
+            <div id="status-display" style="font-weight: 800; color:#0052cc;">Ładowanie...</div>
         </div>
-
-        <div id="documents-container"></div>
-
-        <div class="panic-section">
-            <button class="btn-panic" onclick="wyslijPanike()"><span>⚠️</span> ZGŁOŚ PANIKĘ</button>
-        </div>
-    </main>
-
-    <!-- MODAL ALERTU -->
-    <div id="alert-modal">
-        <div class="modal-content">
-            <h2>🔴 CZERWONY ALERT</h2>
-            <p id="alert-message">Brak treści.</p>
-            <button class="btn-ack" onclick="zamknijAlert()">POTWIERDZAM</button>
+        <a href="karta.html" class="doc-card">
+            <div style="font-size: 18px; font-weight: 700;">Karta Stałego Konfidenta</div>
+            <div style="position: absolute; right: 15px; bottom: 15px; font-size: 24px;">🦅</div>
+        </a>
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="btn-panic" onclick="wyslijPanike()">⚠️ ZGŁOŚ PANIKĘ</button>
         </div>
     </div>
 
-    <nav class="bottom-bar">
-        <a href="pulpit.html" class="nav-item active"><span class="nav-icon">🪪</span><span>Dokumenty</span></a>
-        <a href="services.html" class="nav-item"><span class="nav-icon">📁</span><span>Usługi</span></a>
-        <a href="#" class="nav-item" onclick="alert('Moduł skanera QR w przygotowaniu!')"><span class="nav-icon">🔲</span><span>Kod QR</span></a>
-        <a href="wiecej.html" class="nav-item"><span class="nav-icon">⚙️</span><span>Więcej</span></a>
-    </nav>
+    <div class="nav-bar">
+        <a href="pulpit.html">Dokumenty</a>
+        <a href="#" onclick="alert('Skaner QR')">Kod QR</a>
+    </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I",
-            authDomain: "konfobywatel-331d6.firebaseapp.com",
-            databaseURL: "https://konfobywatel-331d6-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "konfobywatel-331d6",
-            storageBucket: "konfobywatel-331d6.firebasestorage.app",
-            messagingSenderId: "695478312817",
-            appId: "1:695478312817:web:41ef61675267dd936da0d0",
-            measurementId: "G-HE1H1FKJMR"
-        };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const config = { apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I", authDomain: "konfobywatel-331d6.firebaseapp.com", databaseURL: "https://konfobywatel-331d6-default-rtdb.europe-west1.firebasedatabase.app", projectId: "konfobywatel-331d6", storageBucket: "konfobywatel-331d6.firebasestorage.app", messagingSenderId: "695478312817", appId: "1:695478312817:web:41ef61675267dd936da0d0" };
+        firebase.initializeApp(config);
         const db = firebase.database();
         const auth = firebase.auth();
 
-        // 1. DANE UŻYTKOWNIKA I STATUS
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                db.ref('users_status/' + user.uid).on('value', (snap) => {
-                    document.getElementById('status-display').innerText = snap.val() || "W bazie";
-                });
-            }
+        auth.onAuthStateChanged(user => {
+            if (!user) window.location.href = "login.html"; // Przekieruj na logowanie
+            document.getElementById('main-content').style.display = 'block';
+            
+            // Status i Alerty
+            db.ref('users_status/' + user.uid).on('value', s => document.getElementById('status-display').innerText = s.val() || "W bazie");
+            db.ref('global_alert').on('value', s => { if(s.val()) alert("ALERT: " + s.val().message); });
+            db.ref('user_alerts/' + user.email.replace(/\./g, ',')).on('value', s => { if(s.val()) alert("ALERT: " + s.val().message); });
         });
 
-        // 2. ALERT
-        db.ref('alerts').on('value', (snap) => {
-            const data = snap.val();
-            if (data && data.message !== "Brak aktywnych alertów") {
-                document.getElementById('alert-message').innerText = data.message;
-                document.getElementById('alert-modal').style.display = 'flex';
-            }
-        });
-        function zamknijAlert() { document.getElementById('alert-modal').style.display = 'none'; }
-
-        // 3. PANIKA
-        function wyslijPanike() {
-            const nick = localStorage.getItem('uzytkownik_nick') || "Nieznany";
-            if(confirm("Czy na pewno chcesz wysłać sygnał paniki do Sztabu?")) {
-                db.ref('panika').push({ nick: nick, timestamp: new Date().toLocaleString() });
-                alert("Sygnał wysłany!");
-            }
-        }
-
-        // 4. DOKUMENTY
-        const defaultDocs = [{ id: 'doc1', title: 'Karta Stałego Konfidenta', icon: '🦅', link: 'karta.html', colorClass: 'bg-blue' }];
-        const container = document.getElementById('documents-container');
-        document.addEventListener("DOMContentLoaded", () => {
-            container.innerHTML = '';
-            defaultDocs.forEach(docData => {
-                const card = document.createElement('a');
-                card.href = docData.link;
-                card.className = `doc-card ${docData.colorClass}`;
-                card.innerHTML = `<div class="doc-title">${docData.title}</div><div class="doc-icon-bg">${docData.icon}</div>`;
-                container.appendChild(card);
-            });
-        });
+        function wyslijPanike() { db.ref('panika').push({ nick: auth.currentUser.email, timestamp: new Date().toLocaleString() }); }
     </script>
 </body>
 </html>
