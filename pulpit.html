@@ -22,6 +22,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
         body { background-color: #f4f6fa; height: 100vh; display: flex; flex-direction: column; color: #1a1a1c; overflow-x: hidden; }
 
         /* MODAL ALERTU */
@@ -31,7 +32,7 @@
         .btn-ack { background: #cc0000; color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 20px; }
 
         /* SEKCJA PANIKI */
-        .panic-section { margin-top: 30px; padding: 20px; border-top: 1px solid #e5e5ea; text-align: center; }
+        .panic-section { margin-top: 20px; padding: 20px; text-align: center; }
         .btn-panic { background: #ef4444; color: white; border: none; padding: 15px 30px; border-radius: 30px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px; margin: 0 auto; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); }
 
         /* GÓRNY PASEK */
@@ -40,19 +41,20 @@
         
         /* GŁÓWNA ZAWARTOŚĆ */
         main { flex: 1; padding: 10px 20px 80px; overflow-y: auto; }
-        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
-        h1 { font-size: 28px; font-weight: 800; }
-        .actions { display: flex; gap: 15px; font-size: 14px; font-weight: 600; color: #0052cc; }
-        .actions span { cursor: pointer; }
         
-        #documents-container { display: flex; gap: 12px; transition: all 0.3s ease; }
-        .doc-card { text-decoration: none; transition: transform 0.1s; overflow: hidden; border-radius: 16px; padding: 20px; color: white; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        /* DOKUMENTY - POPRAWIONY ROZMIAR (110px) */
+        #documents-container { display: flex; gap: 12px; transition: all 0.3s ease; flex-direction: column; }
+        .doc-card { 
+            width: 100%; height: 110px; border-radius: 16px; padding: 20px; color: white; 
+            display: flex; flex-direction: column; justify-content: space-between; 
+            position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            text-decoration: none; transition: transform 0.1s; overflow: hidden;
+        }
         .doc-title { font-size: 18px; font-weight: 700; max-width: 80%; }
         .doc-icon-bg { position: absolute; right: 15px; bottom: 15px; font-size: 24px; opacity: 0.8; }
-        
-        .layout-stacked { flex-direction: column; }
         .bg-blue { background: linear-gradient(135deg, #1e88e5, #1565c0); }
         
+        /* NAWIGACJA */
         nav.bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; border-top: 1px solid #e5e5ea; display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #8e8e93; font-size: 10px; font-weight: 600; flex: 1; }
         .nav-item.active { color: #0052cc; }
@@ -69,18 +71,12 @@
     <main>
         <div class="page-header">
             <h1>Dokumenty</h1>
-            <div class="actions">
-                <span onclick="zmienUklad()">Układ</span>
-            </div>
         </div>
 
-        <div id="documents-container" class="layout-stacked"></div>
+        <div id="documents-container"></div>
 
-        <!-- SEKCJA PANIKI -->
         <div class="panic-section">
-            <button class="btn-panic" onclick="wyslijPanike()">
-                <span>⚠️</span> ZGŁOŚ PANIKĘ
-            </button>
+            <button class="btn-panic" onclick="wyslijPanike()"><span>⚠️</span> ZGŁOŚ PANIKĘ</button>
         </div>
     </main>
 
@@ -93,9 +89,11 @@
         </div>
     </div>
 
+    <!-- PRZYWRÓCONA NAWIGACJA -->
     <nav class="bottom-bar">
         <a href="pulpit.html" class="nav-item active"><span class="nav-icon">🪪</span><span>Dokumenty</span></a>
         <a href="services.html" class="nav-item"><span class="nav-icon">📁</span><span>Usługi</span></a>
+        <a href="#" class="nav-item" onclick="alert('Moduł skanera QR w przygotowaniu!')"><span class="nav-icon">🔲</span><span>Kod QR</span></a>
         <a href="wiecej.html" class="nav-item"><span class="nav-icon">⚙️</span><span>Więcej</span></a>
     </nav>
 
@@ -122,23 +120,18 @@
             }
         });
 
-        function zamknijAlert() {
-            document.getElementById('alert-modal').style.display = 'none';
-        }
+        function zamknijAlert() { document.getElementById('alert-modal').style.display = 'none'; }
 
         // LOGIKA PANIKI
         function wyslijPanike() {
             const nick = localStorage.getItem('uzytkownik_nick') || "Nieznany";
             if(confirm("Czy na pewno chcesz wysłać sygnał paniki do Sztabu?")) {
-                db.ref('panika').push({
-                    nick: nick,
-                    timestamp: new Date().toLocaleString()
-                });
+                db.ref('panika').push({ nick: nick, timestamp: new Date().toLocaleString() });
                 alert("Sygnał wysłany!");
             }
         }
 
-        // LOGIKA DOKUMENTÓW (ZACHOWANA)
+        // RENDER DOKUMENTÓW
         const defaultDocs = [{ id: 'doc1', title: 'Karta Stałego Konfidenta', icon: '🦅', link: 'karta.html', colorClass: 'bg-blue' }];
         const container = document.getElementById('documents-container');
         
