@@ -25,36 +25,30 @@
         
         body { background-color: #f4f6fa; height: 100vh; display: flex; flex-direction: column; color: #1a1a1c; overflow-x: hidden; }
 
+        /* STATUS OPERACYJNY */
+        .status-card { background: #fff; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; }
+        .status-val { font-size: 20px; font-weight: 800; color: #0052cc; margin-top: 5px; }
+
         /* MODAL ALERTU */
         #alert-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 100%; max-width: 400px; }
         .modal-content h2 { color: #cc0000; margin-bottom: 15px; }
         .btn-ack { background: #cc0000; color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 20px; }
 
-        /* SEKCJA PANIKI */
+        /* PANIKA */
         .panic-section { margin-top: 20px; padding: 20px; text-align: center; }
         .btn-panic { background: #ef4444; color: white; border: none; padding: 15px 30px; border-radius: 30px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px; margin: 0 auto; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); }
 
-        /* GÓRNY PASEK */
+        /* DOKUMENTY */
         header { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 10px; background: #f4f6fa; position: sticky; top: 0; z-index: 10; }
         .header-left { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 18px; color: #cc0000; }
-        
-        /* GŁÓWNA ZAWARTOŚĆ */
         main { flex: 1; padding: 10px 20px 80px; overflow-y: auto; }
-        
-        /* DOKUMENTY - POPRAWIONY ROZMIAR (110px) */
         #documents-container { display: flex; gap: 12px; transition: all 0.3s ease; flex-direction: column; }
-        .doc-card { 
-            width: 100%; height: 110px; border-radius: 16px; padding: 20px; color: white; 
-            display: flex; flex-direction: column; justify-content: space-between; 
-            position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-            text-decoration: none; transition: transform 0.1s; overflow: hidden;
-        }
+        .doc-card { width: 100%; height: 110px; border-radius: 16px; padding: 20px; color: white; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-decoration: none; }
         .doc-title { font-size: 18px; font-weight: 700; max-width: 80%; }
         .doc-icon-bg { position: absolute; right: 15px; bottom: 15px; font-size: 24px; opacity: 0.8; }
         .bg-blue { background: linear-gradient(135deg, #1e88e5, #1565c0); }
         
-        /* NAWIGACJA */
         nav.bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; border-top: 1px solid #e5e5ea; display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #8e8e93; font-size: 10px; font-weight: 600; flex: 1; }
         .nav-item.active { color: #0052cc; }
@@ -65,12 +59,13 @@
 
     <header>
         <div class="header-left"><span class="header-icon">🦅</span><span>KonfObywatel</span></div>
-        <div class="bell-icon">🔔</div>
     </header>
 
     <main>
-        <div class="page-header">
-            <h1>Dokumenty</h1>
+        <!-- STATUS -->
+        <div class="status-card">
+            <h3 style="font-size: 12px; color: #666;">STATUS OPERACYJNY</h3>
+            <div id="status-display" class="status-val">Wczytywanie...</div>
         </div>
 
         <div id="documents-container"></div>
@@ -89,7 +84,6 @@
         </div>
     </div>
 
-    <!-- PRZYWRÓCONA NAWIGACJA -->
     <nav class="bottom-bar">
         <a href="pulpit.html" class="nav-item active"><span class="nav-icon">🪪</span><span>Dokumenty</span></a>
         <a href="services.html" class="nav-item"><span class="nav-icon">📁</span><span>Usługi</span></a>
@@ -110,8 +104,18 @@
         };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const auth = firebase.auth();
 
-        // LOGIKA ALERTÓW
+        // 1. DANE UŻYTKOWNIKA I STATUS
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                db.ref('users_status/' + user.uid).on('value', (snap) => {
+                    document.getElementById('status-display').innerText = snap.val() || "W bazie";
+                });
+            }
+        });
+
+        // 2. ALERT
         db.ref('alerts').on('value', (snap) => {
             const data = snap.val();
             if (data && data.message !== "Brak aktywnych alertów") {
@@ -119,10 +123,9 @@
                 document.getElementById('alert-modal').style.display = 'flex';
             }
         });
-
         function zamknijAlert() { document.getElementById('alert-modal').style.display = 'none'; }
 
-        // LOGIKA PANIKI
+        // 3. PANIKA
         function wyslijPanike() {
             const nick = localStorage.getItem('uzytkownik_nick') || "Nieznany";
             if(confirm("Czy na pewno chcesz wysłać sygnał paniki do Sztabu?")) {
@@ -131,11 +134,10 @@
             }
         }
 
-        // RENDER DOKUMENTÓW
+        // 4. DOKUMENTY
         const defaultDocs = [{ id: 'doc1', title: 'Karta Stałego Konfidenta', icon: '🦅', link: 'karta.html', colorClass: 'bg-blue' }];
         const container = document.getElementById('documents-container');
-        
-        function renderDocs() {
+        document.addEventListener("DOMContentLoaded", () => {
             container.innerHTML = '';
             defaultDocs.forEach(docData => {
                 const card = document.createElement('a');
@@ -144,8 +146,7 @@
                 card.innerHTML = `<div class="doc-title">${docData.title}</div><div class="doc-icon-bg">${docData.icon}</div>`;
                 container.appendChild(card);
             });
-        }
-        document.addEventListener("DOMContentLoaded", renderDocs);
+        });
     </script>
 </body>
 </html>
