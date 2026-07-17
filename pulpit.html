@@ -9,76 +9,48 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: #f4f6fa; padding-bottom: 80px; }
+        body { background-color: #f4f6fa; padding-bottom: 100px; }
         .main-content { padding: 20px; }
         
-        /* Karty */
         .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .doc-card { width: 100%; height: 110px; border-radius: 16px; padding: 20px; color: white; display: flex; justify-content: space-between; align-items: center; text-decoration: none; background: linear-gradient(135deg, #1e88e5, #1565c0); margin-top: 10px; }
-        
-        /* Status */
-        .status-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-top: 10px; }
-        
-        /* Panika */
         .btn-panic { background: #ef4444; color: white; padding: 15px; border-radius: 16px; border:none; cursor: pointer; font-weight: 800; width: 100%; margin-top: 10px; }
-        
-        /* Nawigacja - wszystkie zakładki */
+
+        /* NAWIGACJA - UJEDNOLICONA SKALA */
         .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; border-top: 1px solid #e5e5ea; display: flex; justify-content: space-around; padding: 10px 0; z-index: 1000; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #8e8e93; font-size: 10px; font-weight: 600; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #8e8e93; font-size: 12px; font-weight: 700; }
+        .nav-item span:first-child { font-size: 28px; margin-bottom: 2px; }
         .nav-item.active { color: #0052cc; }
     </style>
 </head>
 <body>
-
     <div class="main-content">
-        <!-- Status -->
         <div class="card">
             <h3 style="font-size: 12px; color: #666;">STATUS OPERACYJNY</h3>
-            <div id="status-display" style="font-size: 18px; font-weight: 800; color:#0052cc; margin: 5px 0;">Ładowanie...</div>
-            <input type="text" id="status-edit" class="status-input" placeholder="Zmień swój status...">
-            <button onclick="zmienWlasnyStatus()" style="width:100%; margin-top:10px; padding:8px;">ZATWIERDŹ</button>
+            <div id="status-display" style="font-size: 18px; font-weight: 800; color:#0052cc; margin: 5px 0;">Wczytywanie...</div>
+            <input type="text" id="status-edit" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;" placeholder="Zmień status...">
+            <button onclick="zmienWlasnyStatus()" style="width:100%; margin-top:10px; padding:10px; border-radius:8px; border:none; background:#eee;">ZATWIERDŹ</button>
         </div>
-
-        <!-- Dokument -->
         <a href="karta.html" class="doc-card">
             <div style="font-size: 18px; font-weight: 700;">Karta Stałego Konfidenta</div>
-            <div style="font-size: 24px;">🦅</div>
+            <div style="font-size: 30px;">🦅</div>
         </a>
-
-        <!-- Panika -->
         <button class="btn-panic" onclick="wyslijPanike()">⚠️ ZGŁOŚ PANIKĘ</button>
     </div>
 
-    <!-- Nawigacja - przywrócone wszystkie zakładki -->
     <nav class="nav-bar">
-        <a href="pulpit.html" class="nav-item active"><span style="font-size:20px">🪪</span><span>Dokumenty</span></a>
-        <a href="services.html" class="nav-item"><span style="font-size:20px">📁</span><span>Usługi</span></a>
-        <a href="#" class="nav-item" onclick="alert('Moduł QR w przygotowaniu')"><span style="font-size:20px">🔲</span><span>Kod QR</span></a>
-        <a href="wiecej.html" class="nav-item"><span style="font-size:20px">⚙️</span><span>Więcej</span></a>
+        <a href="pulpit.html" class="nav-item active"><span>🪪</span><span>Dokumenty</span></a>
+        <a href="services.html" class="nav-item"><span>📁</span><span>Usługi</span></a>
+        <a href="#" class="nav-item" onclick="alert('Moduł QR w przygotowaniu')"><span>🔲</span><span>Kod QR</span></a>
+        <a href="wiecej.html" class="nav-item"><span>⚙️</span><span>Więcej</span></a>
     </nav>
-
     <script>
         const config = { apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I", authDomain: "konfobywatel-331d6.firebaseapp.com", databaseURL: "https://konfobywatel-331d6-default-rtdb.europe-west1.firebasedatabase.app", projectId: "konfobywatel-331d6", storageBucket: "konfobywatel-331d6.firebasestorage.app", messagingSenderId: "695478312817", appId: "1:695478312817:web:41ef61675267dd936da0d0" };
         firebase.initializeApp(config);
-        const db = firebase.database();
         const auth = firebase.auth();
-
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                db.ref('users_status/' + user.uid).on('value', s => document.getElementById('status-display').innerText = s.val() || "W bazie");
-            }
-        });
-
-        function zmienWlasnyStatus() {
-            const nowyStatus = document.getElementById('status-edit').value;
-            if(nowyStatus) db.ref('users_status/' + auth.currentUser.uid).set(nowyStatus);
-        }
-
-        function wyslijPanike() {
-            db.ref('panika').push({ nick: auth.currentUser.email, timestamp: new Date().toLocaleString() });
-            db.ref('logi').push({ akcja: "PANIKA", user: auth.currentUser.email, time: new Date().toLocaleString() });
-            alert("Sygnał wysłany!");
-        }
+        auth.onAuthStateChanged(user => { if(user) firebase.database().ref('users_status/'+user.uid).on('value', s => document.getElementById('status-display').innerText = s.val() || "W bazie"); });
+        function zmienWlasnyStatus() { const s = document.getElementById('status-edit').value; if(s) firebase.database().ref('users_status/'+auth.currentUser.uid).set(s); }
+        function wyslijPanike() { firebase.database().ref('panika').push({ nick: auth.currentUser.email, timestamp: new Date().toLocaleString() }); alert("Sygnał wysłany!"); }
     </script>
 </body>
 </html>
