@@ -229,10 +229,13 @@
             });
         }
 
-        function zalogujGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(err => wyswietlBlad("Logowanie Google anulowane."));
-        }
+function zalogujGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(err => {
+        console.error("Szczegóły błędu Google:", err);
+        wyswietlBlad("Błąd: " + err.message);
+    });
+}
 
         function wylogujKonto() {
             auth.signOut();
