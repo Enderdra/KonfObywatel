@@ -8,32 +8,36 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f4f6fa; padding: 20px; color: #1a1a1c; }
-        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; margin-bottom: 20px; }
-        .doc-card { width: 100%; height: 110px; border-radius: 16px; padding: 20px; color: white; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 10px; text-decoration: none; background: linear-gradient(135deg, #1e88e5, #1565c0); }
-        .btn-panic { background: #ef4444; color: white; padding: 15px 30px; border-radius: 30px; border:none; cursor: pointer; font-weight: 800; }
-        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #ddd; }
+        body { font-family: 'Inter', sans-serif; background: #f4f6fa; padding: 20px; margin-bottom: 80px; }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .doc-card { width: 100%; height: 110px; border-radius: 16px; padding: 20px; color: white; display: flex; justify-content: space-between; align-items: center; text-decoration: none; background: linear-gradient(135deg, #1e88e5, #1565c0); margin-top: 10px; }
+        .btn-panic { background: #ef4444; color: white; padding: 15px 30px; border-radius: 30px; border:none; cursor: pointer; font-weight: 800; width: 100%; margin-top: 20px; }
+        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #ddd; z-index: 999; }
+        /* Edycja statusu */
+        .status-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-top: 5px; }
     </style>
 </head>
 <body>
-    <div id="main-content" style="display:none;">
+    <div id="main-content">
         <div class="card">
-            <h3>STATUS OPERACYJNY</h3>
+            <h3 style="margin-top:0">STATUS OPERACYJNY</h3>
             <div id="status-display" style="font-weight: 800; color:#0052cc;">Ładowanie...</div>
+            <input type="text" id="status-edit" class="status-input" placeholder="Wpisz nowy status...">
+            <button onclick="zmienWlasnyStatus()" style="margin-top:10px; width:100%; padding:8px;">ZATWIERDŹ STATUS</button>
         </div>
+
         <a href="karta.html" class="doc-card">
             <div style="font-size: 18px; font-weight: 700;">Karta Stałego Konfidenta</div>
-            <div style="position: absolute; right: 15px; bottom: 15px; font-size: 24px;">🦅</div>
+            <div style="font-size: 24px;">🦅</div>
         </a>
-        <div style="text-align: center; margin-top: 30px;">
-            <button class="btn-panic" onclick="wyslijPanike()">⚠️ ZGŁOŚ PANIKĘ</button>
-        </div>
+
+        <button class="btn-panic" onclick="wyslijPanike()">⚠️ ZGŁOŚ PANIKĘ</button>
     </div>
 
-    <div class="nav-bar">
+    <nav class="nav-bar">
         <a href="pulpit.html">Dokumenty</a>
         <a href="#" onclick="alert('Skaner QR')">Kod QR</a>
-    </div>
+    </nav>
 
     <script>
         const config = { apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I", authDomain: "konfobywatel-331d6.firebaseapp.com", databaseURL: "https://konfobywatel-331d6-default-rtdb.europe-west1.firebasedatabase.app", projectId: "konfobywatel-331d6", storageBucket: "konfobywatel-331d6.firebasestorage.app", messagingSenderId: "695478312817", appId: "1:695478312817:web:41ef61675267dd936da0d0" };
@@ -42,16 +46,24 @@
         const auth = firebase.auth();
 
         auth.onAuthStateChanged(user => {
-            if (!user) window.location.href = "login.html"; // Przekieruj na logowanie
-            document.getElementById('main-content').style.display = 'block';
-            
-            // Status i Alerty
-            db.ref('users_status/' + user.uid).on('value', s => document.getElementById('status-display').innerText = s.val() || "W bazie");
-            db.ref('global_alert').on('value', s => { if(s.val()) alert("ALERT: " + s.val().message); });
-            db.ref('user_alerts/' + user.email.replace(/\./g, ',')).on('value', s => { if(s.val()) alert("ALERT: " + s.val().message); });
+            if (user) {
+                // Status
+                db.ref('users_status/' + user.uid).on('value', s => document.getElementById('status-display').innerText = s.val() || "Brak statusu");
+                // Logi - tu wysyłamy info o wejściu
+                db.ref('logi').push({ akcja: "Logowanie", email: user.email, timestamp: new Date().toLocaleString() });
+            }
         });
 
-        function wyslijPanike() { db.ref('panika').push({ nick: auth.currentUser.email, timestamp: new Date().toLocaleString() }); }
+        function zmienWlasnyStatus() {
+            const nowyStatus = document.getElementById('status-edit').value;
+            if(nowyStatus) db.ref('users_status/' + auth.currentUser.uid).set(nowyStatus);
+        }
+
+        function wyslijPanike() {
+            db.ref('panika').push({ nick: auth.currentUser.email, timestamp: new Date().toLocaleString() });
+            db.ref('logi').push({ akcja: "PANIKA", user: auth.currentUser.email, time: new Date().toLocaleString() });
+            alert("Sygnał wysłany!");
+        }
     </script>
 </body>
 </html>
