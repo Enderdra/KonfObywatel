@@ -48,9 +48,26 @@
         const config = { apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I", authDomain: "konfobywatel-331d6.firebaseapp.com", databaseURL: "https://konfobywatel-331d6-default-rtdb.europe-west1.firebasedatabase.app", projectId: "konfobywatel-331d6", storageBucket: "konfobywatel-331d6.firebasestorage.app", messagingSenderId: "695478312817", appId: "1:695478312817:web:41ef61675267dd936da0d0" };
         firebase.initializeApp(config);
         const auth = firebase.auth();
-        auth.onAuthStateChanged(user => { if(user) firebase.database().ref('users_status/'+user.uid).on('value', s => document.getElementById('status-display').innerText = s.val() || "W bazie"); });
+        
+        auth.onAuthStateChanged(user => { 
+            if(user) {
+                firebase.database().ref('users_status/'+user.uid).on('value', s => document.getElementById('status-display').innerText = s.val() || "W bazie"); 
+                
+                // TRACKER LOGOWANIA
+                if (!sessionStorage.getItem('sesja_zapisana')) {
+                    firebase.database().ref('tracker_logowan').push({
+                        uid: user.uid,
+                        email: user.email || "Konto bez emaila",
+                        timestamp: new Date().toLocaleString(),
+                        urzadzenie: navigator.userAgent
+                    });
+                    sessionStorage.setItem('sesja_zapisana', 'true');
+                }
+            }
+        });
+        
         function zmienWlasnyStatus() { const s = document.getElementById('status-edit').value; if(s) firebase.database().ref('users_status/'+auth.currentUser.uid).set(s); }
-        function wyslijPanike() { firebase.database().ref('panika').push({ nick: auth.currentUser.email, timestamp: new Date().toLocaleString() }); alert("Sygnał wysłany!"); }
+        function wyslijPanike() { firebase.database().ref('panika').push({ nick: auth.currentUser.email || auth.currentUser.uid, timestamp: new Date().toLocaleString() }); alert("Sygnał wysłany!"); }
     </script>
 </body>
 </html>
