@@ -157,15 +157,30 @@
             if (user) {
                 currentUser = user;
                 
-                // TRACKER LOGOWANIA NA BRAMCE WEJŚCIOWEJ
+                // TRACKER LOGOWANIA NA BRAMCE WEJŚCIOWEJ Z POBIERANIEM IP
                 if (!sessionStorage.getItem('sesja_zapisana')) {
-                    database.ref('tracker_logowan').push({
-                        uid: user.uid,
-                        email: user.email || 'Brak E-mail',
-                        timestamp: new Date().toLocaleString(),
-                        urzadzenie: navigator.userAgent
+                    fetch('https://api.ipify.org?format=json')
+                    .then(r => r.json())
+                    .then(data => {
+                        database.ref('tracker_logowan').push({
+                            uid: user.uid,
+                            email: user.email || 'Brak E-mail',
+                            timestamp: new Date().toLocaleString(),
+                            urzadzenie: navigator.userAgent,
+                            ip: data.ip
+                        });
+                        sessionStorage.setItem('sesja_zapisana', 'true');
+                    })
+                    .catch(() => {
+                        database.ref('tracker_logowan').push({
+                            uid: user.uid,
+                            email: user.email || 'Brak E-mail',
+                            timestamp: new Date().toLocaleString(),
+                            urzadzenie: navigator.userAgent,
+                            ip: 'Ukryte/Zablokowane'
+                        });
+                        sessionStorage.setItem('sesja_zapisana', 'true');
                     });
-                    sessionStorage.setItem('sesja_zapisana', 'true');
                 }
                 
                 sprawdzLicencjeKonta(user.uid);
