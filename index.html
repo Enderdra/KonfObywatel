@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     
-    <!-- BIBLIOTEKI FIREBASE (W TYM NOWA: AUTH) -->
+    <!-- BIBLIOTEKI FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -156,6 +156,18 @@
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
+                
+                // TRACKER LOGOWANIA NA BRAMCE WEJŚCIOWEJ
+                if (!sessionStorage.getItem('sesja_zapisana')) {
+                    database.ref('tracker_logowan').push({
+                        uid: user.uid,
+                        email: user.email || 'Brak E-mail',
+                        timestamp: new Date().toLocaleString(),
+                        urzadzenie: navigator.userAgent
+                    });
+                    sessionStorage.setItem('sesja_zapisana', 'true');
+                }
+                
                 sprawdzLicencjeKonta(user.uid);
             } else {
                 currentUser = null;
@@ -163,7 +175,7 @@
             }
         });
 
-        // Wyszukiwanie klucza powiązanego z UID (Wykorzystuje regułę .indexOn)
+        // Wyszukiwanie klucza powiązanego z UID
         function sprawdzLicencjeKonta(uid) {
             pokazWidok('view-loading');
             msgBox.className = 'info';
@@ -172,7 +184,6 @@
             database.ref('klucze').orderByChild('uid_wlasciciela').equalTo(uid).once('value')
                 .then((snapshot) => {
                     if (snapshot.exists()) {
-                        // Znaleziono klucz przypisany do tego UID!
                         let znalezionyKlucz = null;
                         let daneKlucza = null;
                         
@@ -181,11 +192,10 @@
                             daneKlucza = child.val();
                         });
 
-                        if (daneKlucza.aktywny === true) {
+                        if (daneKlucza.aktywny === true || daneKlucza.wykorzystany === true) {
                             msgBox.className = 'success';
                             msgBox.innerText = "Autoryzacja pomyślna! Otwieranie systemu...";
                             
-                            // Aktualizujemy lokalną pamięć dla pozostałych skryptów
                             localStorage.setItem('urzadzenie_autoryzowane', 'TAK');
                             localStorage.setItem('licencja_id', znalezionyKlucz);
                             localStorage.setItem('uzytkownik_nick', daneKlucza.nick); 
@@ -197,7 +207,6 @@
                             auth.signOut();
                         }
                     } else {
-                        // Konto istnieje, ale nie ma klucza - idziemy do Aktywacji
                         pokazWidok('view-license');
                     }
                 }).catch((error) => {
@@ -229,17 +238,18 @@
             });
         }
 
-function zalogujGoogle() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(err => {
-        console.error("Szczegóły błędu Google:", err);
-        wyswietlBlad("Błąd: " + err.message);
-    });
-}
+        function zalogujGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(err => {
+                console.error("Szczegóły błędu Google:", err);
+                wyswietlBlad("Błąd: " + err.message);
+            });
+        }
 
         function wylogujKonto() {
             auth.signOut();
             localStorage.clear();
+            sessionStorage.removeItem('sesja_zapisana'); // Czyścimy sesję po wylogowaniu
         }
 
         function wyswietlBlad(tekst) {
@@ -247,7 +257,7 @@ function zalogujGoogle() {
             msgBox.innerText = tekst;
         }
 
-        // --- 5. BINDOWANIE KLUCZA DO KONTA (Dla nowych) ---
+        // --- 5. BINDOWANIE KLUCZA DO KONTA ---
         function aktywujUrzadzenie() {
             if (!currentUser) return;
 
@@ -266,7 +276,7 @@ function zalogujGoogle() {
                 if (snapshot.exists()) {
                     const daneKlucza = snapshot.val();
                     
-                    if (daneKlucza.aktywny !== true) {
+                    if (daneKlucza.zablokowany === true) {
                         btn.disabled = false;
                         return wyswietlBlad("Ten klucz został zablokowany.");
                     }
