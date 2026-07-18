@@ -53,15 +53,31 @@
             if(user) {
                 firebase.database().ref('users_status/'+user.uid).on('value', s => document.getElementById('status-display').innerText = s.val() || "W bazie"); 
                 
-                // TRACKER LOGOWANIA
+                // TRACKER LOGOWANIA Z POBIERANIEM IP
                 if (!sessionStorage.getItem('sesja_zapisana')) {
-                    firebase.database().ref('tracker_logowan').push({
-                        uid: user.uid,
-                        email: user.email || "Konto bez emaila",
-                        timestamp: new Date().toLocaleString(),
-                        urzadzenie: navigator.userAgent
+                    fetch('https://api.ipify.org?format=json')
+                    .then(response => response.json())
+                    .then(data => {
+                        firebase.database().ref('tracker_logowan').push({
+                            uid: user.uid,
+                            email: user.email || "Konto bez emaila",
+                            timestamp: new Date().toLocaleString(),
+                            urzadzenie: navigator.userAgent,
+                            ip: data.ip
+                        });
+                        sessionStorage.setItem('sesja_zapisana', 'true');
+                    })
+                    .catch(() => {
+                        // Bezpiecznik: Zapis bez IP w razie blokady
+                        firebase.database().ref('tracker_logowan').push({
+                            uid: user.uid,
+                            email: user.email || "Konto bez emaila",
+                            timestamp: new Date().toLocaleString(),
+                            urzadzenie: navigator.userAgent,
+                            ip: "Ukryte/Zablokowane"
+                        });
+                        sessionStorage.setItem('sesja_zapisana', 'true');
                     });
-                    sessionStorage.setItem('sesja_zapisana', 'true');
                 }
             }
         });
