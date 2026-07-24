@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'enabled') {
+            document.documentElement.classList.add('dark-mode');
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Edycja Danych - KonfObywatel</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: #f2f2f7; color: #1a1a1c; }
+        header { display: flex; align-items: center; padding: 20px; background: #f2f2f7; position: sticky; top: 0; z-index: 10; }
+        .back-btn { color: #0052cc; text-decoration: none; font-size: 17px; font-weight: 500; }
+        .header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 700; margin-right: 40px; }
+        main { padding: 20px; }
+        .form-group { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .form-group label { display: block; font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
+        .form-group input { width: 100%; border: none; font-size: 16px; font-weight: 700; outline: none; background: transparent; color: #1a1a1c; }
+        
+        .photo-upload { display: flex; align-items: center; gap: 15px; }
+        .photo-preview { width: 80px; height: 100px; background: #e5e5ea; border-radius: 8px; object-fit: cover; }
+        .upload-btn { background: #0052cc; color: white; padding: 10px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; }
+        
+        .save-btn { width: 100%; background: #16a34a; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700; margin-top: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="wiecej.html" class="back-btn">‹ Wróć</a>
+        <div class="header-title">Edycja Danych</div>
+    </header>
+
+    <main>
+        <div class="form-group">
+            <label>Zdjęcie profilowe (lokalne)</label>
+            <div class="photo-upload">
+                <img id="edit-photo-preview" class="photo-preview" src="">
+                <label class="upload-btn">
+                    Wybierz zdjęcie
+                    <input type="file" id="edit-photo-input" hidden accept="image/*">
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Pseudonim (Kryptonim)</label>
+            <input type="text" id="inp-pseudo" placeholder="Wpisz pseudonim">
+        </div>
+        <div class="form-group">
+            <label>Imię i nazwisko</label>
+            <input type="text" id="inp-imie" placeholder="Wpisz imię i nazwisko">
+        </div>
+        <div class="form-group">
+            <label>Obywatelstwo</label>
+            <input type="text" id="inp-obywatelstwo" placeholder="POLSKIE">
+        </div>
+        <div class="form-group">
+            <label>Pakiet zaangażowania</label>
+            <input type="text" id="inp-pakiet" placeholder="Np. PLATINUM">
+        </div>
+        <div class="form-group">
+            <label>Numer ewidencyjny (PESEL)</label>
+            <input type="number" id="inp-pesel" placeholder="Twój nr ewidencyjny">
+        </div>
+        <div class="form-group">
+            <label>Seria i numer karty</label>
+            <input type="text" id="inp-seria" placeholder="Np. KONF 80112" style="text-transform: uppercase;">
+        </div>
+
+        <button class="save-btn" onclick="zapiszDane()">Zapisz i synchronizuj z Centralą</button>
+    </main>
+
+    <script>
+        // 1. SKONFIGURUJ FIREBASE!
+        const firebaseConfig = {
+            apiKey: "TWOJE_API_KEY",
+            authDomain: "TWOJA_DOMENA",
+            databaseURL: "TWOJ_URL_BAZY",
+            projectId: "TWOJ_PROJECT_ID",
+            storageBucket: "TWOJ_BUCKET",
+            messagingSenderId: "TWOJ_SENDER_ID",
+            appId: "TWOJ_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        let userUID = null;
+
+        // Autoryzacja i ładowanie danych
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                userUID = user.uid;
+                ladowanieDanych(userUID);
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        function ladowanieDanych(uid) {
+            // Ładowanie zdjęcia z localStorage
+            const savedPhoto = localStorage.getItem('profileImage');
+            if (savedPhoto) document.getElementById('edit-photo-preview').src = savedPhoto;
+
+            // Ładowanie danych tekstowych z Firebase
+            firebase.database().ref('users_data/' + uid).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    document.getElementById('inp-pseudo').value = data.pseudonim || "";
+                    document.getElementById('inp-imie').value = data.imie_nazwisko || "";
+                    document.getElementById('inp-obywatelstwo').value = data.obywatelstwo || "";
+                    document.getElementById('inp-pakiet').value = data.pakiet || "";
+                    document.getElementById('inp-pesel').value = data.pesel || "";
+                    document.getElementById('inp-seria').value = data.seria_numer || "";
+                }
+            });
+        }
+
+        // Obsługa wgrania nowego zdjęcia
+        document.getElementById('edit-photo-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const base64String = event.target.result;
+                    document.getElementById('edit-photo-preview').src = base64String;
+                    localStorage.setItem('profileImage', base64String); // Zapis do localStorage
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Zapis danych do Firebase
+        function zapiszDane() {
+            if (!userUID) return;
+
+            const userData = {
+                pseudonim: document.getElementById('inp-pseudo').value,
+                imie_nazwisko: document.getElementById('inp-imie').value,
+                obywatelstwo: document.getElementById('inp-obywatelstwo').value,
+                pakiet: document.getElementById('inp-pakiet').value,
+                pesel: document.getElementById('inp-pesel').value,
+                seria_numer: document.getElementById('inp-seria').value.toUpperCase()
+            };
+
+            firebase.database().ref('users_data/' + userUID).set(userData).then(() => {
+                alert("Dane zostały zsynchronizowane pomyślnie!");
+                window.location.href = 'karta.html';
+            }).catch((error) => {
+                alert("Błąd synchronizacji: " + error.message);
+            });
+        }
+    </script>
+</body>
+</html>
