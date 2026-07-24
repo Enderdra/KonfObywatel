@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'enabled') {
+            document.documentElement.classList.add('dark-mode');
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Kod QR - KonfObywatel</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #f2f2f7; height: 100vh; display: flex; flex-direction: column; color: #1a1a1c; }
+        
+        header { padding: 20px 20px 5px; background: #f2f2f7; font-weight: 800; font-size: 32px; margin-bottom: 15px; }
+        main { flex: 1; padding: 10px 20px 90px; overflow-y: auto; }
+        
+        .category-title { font-size: 15px; font-weight: 700; color: #333; margin: 20px 5px 10px; }
+        .service-group { background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .service-item { display: flex; align-items: center; padding: 18px 15px; text-decoration: none; color: #1a1a1c; position: relative; background: #ffffff; cursor: pointer; }
+        .service-item:active { background: #f9f9f9; }
+        .service-item:not(:last-child)::after { content: ''; position: absolute; bottom: 0; left: 50px; right: 0; height: 1px; background: #e5e5ea; }
+        .service-icon { font-size: 22px; width: 35px; }
+        .service-name { flex: 1; font-size: 16px; font-weight: 600; }
+        .service-arrow { color: #c7c7cc; font-size: 18px; font-weight: 600; }
+
+        nav.bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; border-top: 1px solid #e5e5ea; display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #8e8e93; font-size: 10px; font-weight: 600; flex: 1; }
+        .nav-item.active { color: #0052cc; }
+        .nav-icon { font-size: 24px; margin-bottom: 2px; }
+    </style>
+</head>
+<body>
+
+    <header>Kod QR</header>
+
+    <main>
+        <div class="category-title">Weryfikacja i Udostępnianie</div>
+        <div class="service-group">
+            <a href="qr_generator.html" class="service-item">
+                <div class="service-icon">📤</div>
+                <div class="service-name">Pokaż mój kod QR</div>
+                <div class="service-arrow">›</div>
+            </a>
+            <a href="qr_scanner.html" class="service-item">
+                <div class="service-icon">📷</div>
+                <div class="service-name">Skanuj kod QR (Potwierdź dane)</div>
+                <div class="service-arrow">›</div>
+            </a>
+        </div>
+    </main>
+
+    <nav class="bottom-bar">
+        <a href="karta.html" class="nav-item">
+            <span class="nav-icon">🪪</span><span>Dokumenty</span>
+        </a>
+        <a href="services.html" class="nav-item">
+            <span class="nav-icon">📁</span><span>Usługi</span>
+        </a>
+        <a href="qr_menu.html" class="nav-item active">
+            <span class="nav-icon">🔲</span><span>Kod QR</span>
+        </a>
+        <a href="wiecej.html" class="nav-item">
+            <span class="nav-icon">⚙️</span><span>Więcej</span>
+        </a>
+    </nav>
+
+</body>
+</html>
