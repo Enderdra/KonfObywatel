@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'enabled') {
+            document.documentElement.classList.add('dark-mode');
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Liga Kabli - KonfObywatel</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: #f2f2f7; color: #1a1a1c; display: flex; flex-direction: column; height: 100vh; }
+        
+        header { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: #f2f2f7; border-bottom: 1px solid #e5e5ea; }
+        .back-btn { color: #0052cc; text-decoration: none; font-size: 17px; font-weight: 500; min-width: 60px; }
+        .header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 700; }
+        .header-placeholder { min-width: 60px; }
+
+        main { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; gap: 20px; max-width: 600px; width: 100%; margin: 0 auto; }
+
+        .card { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .card-title { font-size: 16px; font-weight: 800; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .season-badge { background: #e6f4ea; color: #137333; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+        .my-score-box { text-align: center; padding: 15px; background: #f0f7ff; border-radius: 12px; margin-bottom: 15px; }
+        .my-points { font-size: 32px; font-weight: 800; color: #0052cc; }
+        .my-rank { font-size: 14px; font-weight: 700; color: #333; margin-top: 5px; }
+
+        .leaderboard-list, .history-list { display: flex; flex-direction: column; gap: 10px; }
+        .leaderboard-item, .history-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f9f9fb; border-radius: 12px; border: 1px solid #e5e5ea; }
+        .user-info, .history-info { display: flex; flex-direction: column; gap: 2px; }
+        .user-name, .history-title { font-weight: 700; font-size: 15px; }
+        .user-rank, .history-date { font-size: 12px; color: #0052cc; font-weight: 600; }
+        .user-score, .history-pts { font-size: 16px; font-weight: 800; }
+        .pts-positive { color: #16a34a; }
+        .pts-negative { color: #dc2626; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="qr_menu.html" class="back-btn">‹ Wróć</a>
+        <div class="header-title">Liga Kabli 🏆</div>
+        <div class="header-placeholder"></div>
+    </header>
+
+    <main>
+        <!-- Twój Wynik i Ranga -->
+        <div class="card">
+            <div class="card-title">
+                <span>Twój Status w Lidze</span>
+                <span id="season-number" class="season-badge">Sezon #1</span>
+            </div>
+            <div class="my-score-box">
+                <div id="my-points-val" class="my-points">0 pkt</div>
+                <div id="my-rank-val" class="my-rank">Ranga: Ładowanie...</div>
+            </div>
+        </div>
+
+        <!-- Historia Punktów i Potrąceń -->
+        <div class="card">
+            <div class="card-title">Twoja Historia Zdarzeń</div>
+            <div id="history-list" class="history-list">
+                <div style="text-align: center; color: #888; font-size: 13px; padding: 10px;">Brak historii aktywności.</div>
+            </div>
+        </div>
+
+        <!-- Tabela Wyników (Top Kablowacze) -->
+        <div class="card">
+            <div class="card-title">Tabela Ligi (Ranking)</div>
+            <div id="leaderboard" class="leaderboard-list">
+                <div style="text-align: center; color: #888; font-size: 13px; padding: 20px;">Ładowanie tabeli...</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I",
+            authDomain: "konfobywatel-331d6.firebaseapp.com",
+            databaseURL: "https://konfobywatel-331d6-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "konfobywatel-331d6",
+            storageBucket: "konfobywatel-331d6.firebasestorage.app",
+            messagingSenderId: "695478312817",
+            appId: "1:695478312817:web:41ef61675267dd936da0d0",
+            measurementId: "G-HE1H1FKJMR"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        const RANKS = [
+            { min: 1200, name: "Bóg kabli" },
+            { min: 900, name: "Imperator kabli" },
+            { min: 825, name: "Wszechwiedzący konfident kablowacz" },
+            { min: 800, name: "Elitarny donosiciel" },
+            { min: 775, name: "Legenda donosów" },
+            { min: 700, name: "Arcymistrz sześćdziesiony" },
+            { min: 650, name: "Ranga: Kabel" },
+            { min: 600, name: "Naczelny informator" },
+            { min: 550, name: "Komendant kablowaczy" },
+            { min: 475, name: "Doświadczony konfident" },
+            { min: 400, name: "Starszy donosiciel" },
+            { min: 325, name: "Fan makowca" },
+            { min: 275, name: "Młody donosiciel" },
+            { min: 200, name: "Początkujący konfident" },
+            { min: 150, name: "Młodszy kablowacz" },
+            { min: 0, name: "Świeżak / Obywatel" }
+        ];
+
+        function getRankName(points) {
+            for (let r of RANKS) {
+                if (points >= r.min) return r.name;
+            }
+            return "Obywatel";
+        }
+
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                inicjalizujWidok(user.uid);
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        function inicjalizujWidok(uid) {
+            const dbRef = firebase.database().ref();
+
+            // Sezon
+            dbRef.child('liga_sezon').on('value', (snap) => {
+                const sezon = snap.val() || 1;
+                document.getElementById('season-number').innerText = `Sezon #${sezon}`;
+            });
+
+            // Dane użytkownika i jego historia
+            dbRef.child('users_data/' + uid).on('value', (snap) => {
+                if (snap.exists()) {
+                    const data = snap.val();
+                    const punkty = data.punkty || 0;
+                    document.getElementById('my-points-val').innerText = `${punkty} pkt`;
+                    document.getElementById('my-rank-val').innerText = `Ranga: ${getRankName(punkty)}`;
+
+                    // Renderowanie historii
+                    const histList = document.getElementById('history-list');
+                    histList.innerHTML = '';
+                    if (data.historia) {
+                        const entries = Object.values(data.historia).reverse();
+                        entries.forEach(h => {
+                            const isPlus = h.punkty >= 0;
+                            const item = document.createElement('div');
+                            item.className = 'history-item';
+                            item.innerHTML = `
+                                <div class="history-info">
+                                    <span class="history-title">${h.tytul}</span>
+                                    <span class="history-date">${h.data || ''}</span>
+                                </div>
+                                <div class="history-pts ${isPlus ? 'pts-positive' : 'pts-negative'}">${isPlus ? '+' : ''}${h.punkty} pkt</div>
+                            `;
+                            histList.appendChild(item);
+                        });
+                    } else {
+                        histList.innerHTML = '<div style="text-align: center; color: #888; font-size: 13px; padding: 10px;">Brak historii aktywności.</div>';
+                    }
+                }
+            });
+
+            // Globalny ranking
+            dbRef.child('users_data').on('value', (snapshot) => {
+                const listEl = document.getElementById('leaderboard');
+                listEl.innerHTML = '';
+
+                if (!snapshot.exists()) return;
+
+                let users = [];
+                snapshot.forEach((childSnap) => {
+                    const data = childSnap.val();
+                    users.push({
+                        pseudonim: data.pseudonim || data.imie_nazwisko || "Anonimowy Kabel",
+                        punkty: data.punkty || 0
+                    });
+                });
+
+                users.sort((a, b) => b.punkty - a.punkty);
+
+                users.forEach((u, index) => {
+                    const rankName = getRankName(u.punkty);
+                    const item = document.createElement('div');
+                    item.className = 'leaderboard-item';
+                    item.innerHTML = `
+                        <div class="user-info">
+                            <span class="user-name">#${index + 1}. ${u.pseudonim}</span>
+                            <span class="user-rank">${rankName}</span>
+                        </div>
+                        <div class="user-score">${u.punkty} pkt</div>
+                    `;
+                    listEl.appendChild(item);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
