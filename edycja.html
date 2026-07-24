@@ -10,7 +10,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Edycja Danych - KonfObywatel</title>
-    <link rel="stylesheet" href="style.css">
+    
+    <!-- Usunięto link do style.css aby uniknąć konfliktów układu -->
     
     <!-- Firebase SDK (Wersja Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -20,20 +21,24 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: #f2f2f7; color: #1a1a1c; }
-        header { display: flex; align-items: center; padding: 20px; background: #f2f2f7; position: sticky; top: 0; z-index: 10; }
-        .back-btn { color: #0052cc; text-decoration: none; font-size: 17px; font-weight: 500; }
-        .header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 700; margin-right: 40px; }
-        main { padding: 20px; }
-        .form-group { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .form-group label { display: block; font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
+        body { background-color: #f2f2f7; color: #1a1a1c; display: block; }
+        
+        header { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: #f2f2f7; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #e5e5ea; }
+        .back-btn { color: #0052cc; text-decoration: none; font-size: 17px; font-weight: 500; min-width: 60px; }
+        .header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 700; }
+        .header-placeholder { min-width: 60px; }
+        
+        main { padding: 20px; max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
+        
+        .form-group { background: #fff; border-radius: 12px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 12px; color: #666; font-weight: 600; text-transform: uppercase; }
         .form-group input { width: 100%; border: none; font-size: 16px; font-weight: 700; outline: none; background: transparent; color: #1a1a1c; }
         
-        .photo-upload { display: flex; align-items: center; gap: 15px; }
+        .photo-upload { display: flex; align-items: center; gap: 15px; margin-top: 5px; }
         .photo-preview { width: 80px; height: 100px; background: #e5e5ea; border-radius: 8px; object-fit: cover; }
-        .upload-btn { background: #0052cc; color: white; padding: 10px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; }
+        .upload-btn { background: #0052cc; color: white; padding: 10px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; text-align: center; }
         
-        .save-btn { width: 100%; background: #16a34a; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700; margin-top: 20px; cursor: pointer; }
+        .save-btn { width: 100%; background: #16a34a; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700; margin-top: 10px; cursor: pointer; text-align: center; }
     </style>
 </head>
 <body>
@@ -41,6 +46,7 @@
     <header>
         <a href="wiecej.html" class="back-btn">‹ Wróć</a>
         <div class="header-title">Edycja Danych</div>
+        <div class="header-placeholder"></div>
     </header>
 
     <main>
@@ -84,7 +90,7 @@
     </main>
 
     <script>
-        // 1. ZINTEGROWANY SZYFR FIREBASE
+        // FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I",
             authDomain: "konfobywatel-331d6.firebaseapp.com",
@@ -99,26 +105,21 @@
 
         let userUID = null;
 
-        // Autoryzacja i ładowanie danych
+        // Autoryzacja
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 userUID = user.uid;
                 ladowanieDanych(userUID);
             } else {
-                // Jeśli wyrzuca tu z powrotem, oznacza to, że sesja Firebase wygasła 
-                // lub logowanie na głównej stronie omija Firebase Auth
-                window.location.href = 'login.html';
+                console.warn("Brak aktywnej sesji Firebase Auth!");
+                alert("Nie jesteś zalogowany w Firebase! Baza danych może odrzucić zapis (brak uprawnień).");
             }
         });
 
         function ladowanieDanych(uid) {
-            // Ładowanie zdjęcia z localStorage
             const savedPhoto = localStorage.getItem('profileImage');
-            if (savedPhoto) {
-                document.getElementById('edit-photo-preview').src = savedPhoto;
-            }
+            if (savedPhoto) document.getElementById('edit-photo-preview').src = savedPhoto;
 
-            // Ładowanie danych tekstowych z Firebase
             firebase.database().ref('users_data/' + uid).once('value').then((snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
@@ -132,7 +133,6 @@
             });
         }
 
-        // Obsługa wgrania nowego zdjęcia (zapis do localStorage)
         document.getElementById('edit-photo-input').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -146,10 +146,9 @@
             }
         });
 
-        // Zapis danych do Firebase (synchronizacja)
         function zapiszDane() {
             if (!userUID) {
-                alert("Błąd: Nie wykryto autoryzacji Firebase. Zaloguj się ponownie.");
+                alert("Błąd: Nie wykryto autoryzacji Firebase (UID). Nie można zapisać danych do bazy.");
                 return;
             }
 
@@ -166,7 +165,7 @@
                 alert("Dane zostały zsynchronizowane pomyślnie!");
                 window.location.href = 'karta.html';
             }).catch((error) => {
-                alert("Błąd synchronizacji: " + error.message);
+                alert("Odmowa dostępu z bazy: " + error.message);
             });
         }
     </script>
