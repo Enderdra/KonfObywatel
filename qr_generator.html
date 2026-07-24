@@ -43,21 +43,21 @@
 
     <header>
         <a href="qr_menu.html" class="back-btn">‹ Wróć</a>
-        <div class="header-title">Twój Kod Weryfikacyjny</div>
+        <div class="header-title">Jednorazowy Kod</div>
         <div class="header-placeholder"></div>
     </header>
 
     <main>
         <div class="qr-card">
-            <div class="status-badge">🟢 Połączono z serwerem</div>
+            <div class="status-badge">🟢 Token Jednorazowy Aktywny</div>
             <div id="qrcode"></div>
             
             <div class="code-box">
-                <div class="code-label">Kod 6-cyfrowy do wpisania</div>
+                <div class="code-label">Kod 6-cyfrowy</div>
                 <div id="display-kod6" class="code-value">------</div>
             </div>
 
-            <div class="info-text">Pokaż kod QR lub podaj powyższy kod weryfikujący osobie sprawdzającej.</div>
+            <div class="info-text">Kod jest jednorazowy. Po pomyślnej weryfikacji przez skaner zostanie natychmiast unieważniony.</div>
         </div>
     </main>
 
@@ -78,19 +78,12 @@
             if (user) {
                 const userRef = firebase.database().ref('users_data/' + user.uid);
                 
-                userRef.once('value').then((snapshot) => {
-                    let kod6 = "";
-                    if (snapshot.exists() && snapshot.val().kod6) {
-                        kod6 = snapshot.val().kod6;
-                    } else {
-                        // Generowanie losowego 6-cyfrowego kodu jeśli nie istnieje
-                        kod6 = Math.floor(100000 + Math.random() * 900000).toString();
-                        userRef.update({ kod6: kod6 });
-                    }
+                // Generujemy nowy, jednorazowy kod przy każdym otwarciu widoku
+                const nowyKod6 = Math.floor(100000 + Math.random() * 900000).toString();
+                
+                userRef.update({ kod6: nowyKod6 }).then(() => {
+                    document.getElementById('display-kod6').innerText = nowyKod6;
 
-                    document.getElementById('display-kod6').innerText = kod6;
-
-                    // Generowanie QR zawierającego UID
                     const payload = JSON.stringify({ uid: user.uid, system: "KonfObywatel" });
                     document.getElementById("qrcode").innerHTML = "";
                     new QRCode(document.getElementById("qrcode"), {
