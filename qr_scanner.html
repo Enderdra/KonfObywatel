@@ -58,7 +58,6 @@
     </header>
 
     <main>
-        <!-- Sekcja skanera i wpisywania ręcznego -->
         <div id="scanner-section" class="scanner-section">
             <div id="reader"></div>
             
@@ -73,7 +72,6 @@
             </div>
         </div>
 
-        <!-- Wynik weryfikacji -->
         <div id="result-container" class="result-card">
             <div class="result-header">🔍 Wynik Weryfikacji Serwera</div>
             <div class="result-row">
@@ -114,6 +112,15 @@
 
         let html5QrCode;
 
+        // Kluczowa zmiana: Czekamy na autoryzację Firebase przed uruchomieniem czegokolwiek
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                uruchomSkaner();
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
         function onScanSuccess(decodedText, decodedResult) {
             try {
                 const data = JSON.parse(decodedText);
@@ -130,7 +137,6 @@
             }
         }
 
-        // Sprawdzanie po wpisaniu 6-cyfrowego kodu ręcznie
         function sprawdzKodRecznie() {
             const kod = document.getElementById('manual-code-input').value.trim();
             if (kod.length !== 6) {
@@ -142,11 +148,9 @@
                 html5QrCode.stop().catch(() => {});
             }
 
-            // Zapytanie do bazy Firebase szukające użytkownika z tym kodem6
             firebase.database().ref('users_data').orderByChild('kod6').equalTo(kod).once('value')
                 .then((snapshot) => {
                     if (snapshot.exists()) {
-                        // Pobieramy pierwsze pasujące dziecko (UID)
                         const uid = Object.keys(snapshot.val())[0];
                         pobierzDaneZServera(uid);
                     } else {
@@ -208,10 +212,6 @@
                 console.warn("Aparat niedostępny lub brak uprawnień:", err);
             });
         }
-
-        window.onload = () => {
-            uruchomSkaner();
-        };
     </script>
 </body>
 </html>
