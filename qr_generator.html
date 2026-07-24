@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'enabled') {
+            document.documentElement.classList.add('dark-mode');
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pokaż kod QR - KonfObywatel</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: #f2f2f7; color: #1a1a1c; display: flex; flex-direction: column; height: 100vh; }
+        
+        header { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: #f2f2f7; border-bottom: 1px solid #e5e5ea; }
+        .back-btn { color: #0052cc; text-decoration: none; font-size: 17px; font-weight: 500; min-width: 60px; }
+        .header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 700; }
+        .header-placeholder { min-width: 60px; }
+
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; gap: 20px; }
+        
+        .qr-card { background: #fff; padding: 30px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; gap: 15px; max-width: 320px; width: 100%; }
+        #qrcode { display: flex; justify-content: center; align-items: center; padding: 10px; background: white; }
+        
+        .info-text { font-size: 13px; color: #666; line-height: 1.4; }
+        .status-badge { background: #e6f4ea; color: #137333; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="qr_menu.html" class="back-btn">‹ Wróć</a>
+        <div class="header-title">Twój Kod QR</div>
+        <div class="header-placeholder"></div>
+    </header>
+
+    <main>
+        <div class="qr-card">
+            <div class="status-badge">🟢 Połączono z serwerem</div>
+            <div id="qrcode"></div>
+            <div class="info-text">Kod zawiera Twój unikalny identyfikator. Skanujący potweirdzi Twoje dane bezpośrednio przez centralę Firebase.</div>
+        </div>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I",
+            authDomain: "konfobywatel-331d6.firebaseapp.com",
+            databaseURL: "https://konfobywatel-331d6-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "konfobywatel-331d6",
+            storageBucket: "konfobywatel-331d6.firebasestorage.app",
+            messagingSenderId: "695478312817",
+            appId: "1:695478312817:web:41ef61675267dd936da0d0",
+            measurementId: "G-HE1H1FKJMR"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                const payload = JSON.stringify({ uid: user.uid, system: "KonfObywatel" });
+                document.getElementById("qrcode").innerHTML = "";
+                new QRCode(document.getElementById("qrcode"), {
+                    text: payload,
+                    width: 200,
+                    height: 200
+                });
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+</html>
