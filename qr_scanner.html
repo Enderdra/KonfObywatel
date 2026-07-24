@@ -9,12 +9,12 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Weryfikacja - KonfObywatel</title>
+    <title>Pokaż kod QR - KonfObywatel</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -26,74 +26,38 @@
         .header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 700; }
         .header-placeholder { min-width: 60px; }
 
-        main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; width: 100%; max-width: 500px; margin: 0 auto; }
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; gap: 20px; }
         
-        .scanner-section { width: 100%; display: flex; flex-direction: column; gap: 15px; }
-        #reader { width: 100%; border-radius: 12px; overflow: hidden; border: none !important; background: #000; }
+        .qr-card { background: #fff; padding: 25px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; gap: 15px; max-width: 320px; width: 100%; }
+        #qrcode { display: flex; justify-content: center; align-items: center; padding: 10px; background: white; }
         
-        .manual-box { background: #fff; padding: 20px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 10px; width: 100%; }
-        .manual-box label { font-size: 12px; color: #666; font-weight: 600; text-transform: uppercase; }
-        .manual-input-row { display: flex; gap: 10px; }
-        .manual-box input { flex: 1; border: 1px solid #d1d1d6; border-radius: 10px; padding: 12px; font-size: 18px; font-weight: 700; text-align: center; letter-spacing: 2px; outline: none; }
-        .manual-box button { background: #0052cc; color: white; border: none; padding: 0 20px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+        .code-box { background: #f2f2f7; padding: 12px 20px; border-radius: 12px; width: 100%; }
+        .code-label { font-size: 11px; color: #666; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+        .code-value { font-size: 24px; font-weight: 800; letter-spacing: 4px; color: #0052cc; }
 
-        .result-card { background: #fff; border-radius: 16px; padding: 20px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: none; }
-        .result-header { font-size: 18px; font-weight: 800; margin-bottom: 15px; }
-        .result-row { margin-bottom: 12px; font-size: 14px; }
-        .result-label { color: #666; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-        .result-val { font-size: 16px; font-weight: 700; color: #1a1a1c; }
-        
-        .valid-box { background: #e6f4ea; color: #137333; padding: 12px; border-radius: 10px; text-align: center; font-weight: 700; margin-top: 15px; }
-        .invalid-box { background: #fce8e6; color: #c5221f; padding: 12px; border-radius: 10px; text-align: center; font-weight: 700; margin-top: 15px; }
-        
-        .btn-rescan { width: 100%; background: #0052cc; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; margin-top: 15px; cursor: pointer; }
+        .info-text { font-size: 12px; color: #666; line-height: 1.4; }
+        .status-badge { background: #e6f4ea; color: #137333; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
     </style>
 </head>
 <body>
 
     <header>
         <a href="qr_menu.html" class="back-btn">‹ Wróć</a>
-        <div class="header-title">Weryfikator Danych</div>
+        <div class="header-title">Jednorazowy Kod</div>
         <div class="header-placeholder"></div>
     </header>
 
     <main>
-        <div id="scanner-section" class="scanner-section">
-            <div id="reader"></div>
+        <div class="qr-card">
+            <div class="status-badge">🟢 Token Jednorazowy Aktywny</div>
+            <div id="qrcode"></div>
             
-            <div style="text-align: center; font-size: 13px; color: #888; font-weight: 600; margin: 5px 0;">LUB WPISZ KOD RĘCZNIE</div>
+            <div class="code-box">
+                <div class="code-label">Kod 6-cyfrowy</div>
+                <div id="display-kod6" class="code-value">------</div>
+            </div>
 
-            <div class="manual-box">
-                <label>6-cyfrowy kod z aplikacji sprawdzanego</label>
-                <div class="manual-input-row">
-                    <input type="text" id="manual-code-input" maxlength="6" placeholder="000000">
-                    <button onclick="sprawdzKodRecznie()">Sprawdź</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="result-container" class="result-card">
-            <div class="result-header">🔍 Wynik Weryfikacji Serwera</div>
-            <div class="result-row">
-                <div class="result-label">Pseudonim</div>
-                <div id="res-pseudo" class="result-val">-</div>
-            </div>
-            <div class="result-row">
-                <div class="result-label">Imię i nazwisko</div>
-                <div id="res-imie" class="result-val">-</div>
-            </div>
-            <div class="result-row">
-                <div class="result-label">Seria i numer</div>
-                <div id="res-seria" class="result-val">-</div>
-            </div>
-            <div class="result-row">
-                <div class="result-label">PESEL</div>
-                <div id="res-pesel" class="result-val">-</div>
-            </div>
-            
-            <div id="verification-status"></div>
-            
-            <button class="btn-rescan" onclick="restartSkanera()">Sprawdź kolejną osobę</button>
+            <div class="info-text">Kod jest jednorazowy. Po pomyślnej weryfikacji przez skaner zostanie natychmiast unieważniony.</div>
         </div>
     </main>
 
@@ -110,108 +74,28 @@
         };
         firebase.initializeApp(firebaseConfig);
 
-        let html5QrCode;
-
-        // Kluczowa zmiana: Czekamy na autoryzację Firebase przed uruchomieniem czegokolwiek
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
-                uruchomSkaner();
+                const userRef = firebase.database().ref('users_data/' + user.uid);
+                
+                // Generujemy nowy, jednorazowy kod przy każdym otwarciu widoku
+                const nowyKod6 = Math.floor(100000 + Math.random() * 900000).toString();
+                
+                userRef.update({ kod6: nowyKod6 }).then(() => {
+                    document.getElementById('display-kod6').innerText = nowyKod6;
+
+                    const payload = JSON.stringify({ uid: user.uid, system: "KonfObywatel" });
+                    document.getElementById("qrcode").innerHTML = "";
+                    new QRCode(document.getElementById("qrcode"), {
+                        text: payload,
+                        width: 180,
+                        height: 180
+                    });
+                });
             } else {
                 window.location.href = 'login.html';
             }
         });
-
-        function onScanSuccess(decodedText, decodedResult) {
-            try {
-                const data = JSON.parse(decodedText);
-                if (data.uid && data.system === "KonfObywatel") {
-                    if (html5QrCode) {
-                        html5QrCode.stop().catch(() => {});
-                    }
-                    pobierzDaneZServera(data.uid);
-                } else {
-                    alert("Nieznany kod QR.");
-                }
-            } catch (e) {
-                alert("Błąd struktury kodu QR.");
-            }
-        }
-
-        function sprawdzKodRecznie() {
-            const kod = document.getElementById('manual-code-input').value.trim();
-            if (kod.length !== 6) {
-                alert("Kod musi składać się z 6 cyfr!");
-                return;
-            }
-
-            if (html5QrCode) {
-                html5QrCode.stop().catch(() => {});
-            }
-
-            firebase.database().ref('users_data').orderByChild('kod6').equalTo(kod).once('value')
-                .then((snapshot) => {
-                    if (snapshot.exists()) {
-                        const uid = Object.keys(snapshot.val())[0];
-                        pobierzDaneZServera(uid);
-                    } else {
-                        pokażBrakWynikow();
-                    }
-                })
-                .catch((err) => {
-                    alert("Błąd połączenia z serwerem: " + err.message);
-                });
-        }
-
-        function pobierzDaneZServera(uid) {
-            document.getElementById('scanner-section').style.display = 'none';
-            document.getElementById('result-container').style.display = 'block';
-
-            firebase.database().ref('users_data/' + uid).once('value').then((snapshot) => {
-                const statusBox = document.getElementById('verification-status');
-                
-                if (snapshot.exists() && snapshot.val().imie_nazwisko) {
-                    const val = snapshot.val();
-                    document.getElementById('res-pseudo').innerText = val.pseudonim || "-";
-                    document.getElementById('res-imie').innerText = val.imie_nazwisko || "-";
-                    document.getElementById('res-seria').innerText = val.seria_numer || "-";
-                    document.getElementById('res-pesel').innerText = val.pesel || "-";
-                    
-                    statusBox.innerHTML = '<div class="valid-box">✅ STATUS: Potwierdzone przez Centralę (Aktywny Konfident)</div>';
-                } else {
-                    pokażBrakWynikow();
-                }
-            });
-        }
-
-        function pokażBrakWynikow() {
-            document.getElementById('scanner-section').style.display = 'none';
-            document.getElementById('result-container').style.display = 'block';
-
-            document.getElementById('res-pseudo').innerText = "NIEZNANY";
-            document.getElementById('res-imie').innerText = "Brak danych w bazie";
-            document.getElementById('res-seria').innerText = "-";
-            document.getElementById('res-pesel').innerText = "-";
-            
-            document.getElementById('verification-status').innerHTML = '<div class="invalid-box">❌ OSTRZEŻENIE: Nie znaleziono użytkownika lub kod jest błędny!</div>';
-        }
-
-        function restartSkanera() {
-            document.getElementById('result-container').style.display = 'none';
-            document.getElementById('scanner-section').style.display = 'flex';
-            document.getElementById('manual-code-input').value = '';
-            uruchomSkaner();
-        }
-
-        function uruchomSkaner() {
-            html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 220, height: 220 } },
-                onScanSuccess
-            ).catch(err => {
-                console.warn("Aparat niedostępny lub brak uprawnień:", err);
-            });
-        }
     </script>
 </body>
 </html>
