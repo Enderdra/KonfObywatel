@@ -7,14 +7,16 @@
             document.body.classList.add('dark-mode');
         }
     </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nowe Zgłoszenie - KonfObywatel</title>
+    <link rel="stylesheet" href="style.css">
     
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nowe Zgłoszenie</title>
-    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDK (Wersja Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
     <style>
         .file-input-wrapper { background: #f8f8f8; border: 2px dashed #c7c7cc; border-radius: 8px; text-align: center; padding: 20px; cursor: pointer; }
         .disclaimer-text { font-size: 11px; color: #d32f2f; text-align: center; margin-top: 15px; font-weight: bold; }
@@ -59,8 +61,7 @@
             <div class="disclaimer-text">⚠️ Zgłoszenia trafiają do tajnego rejestru, dostępnego tylko dla oficerów z hasłem.</div>
         </div>
     </div>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I",
@@ -74,17 +75,65 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+
+        let currentUser = null;
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
         function send() {
-            const data = {
-                data: new Date().toLocaleString('pl-PL'),
-                typ: document.getElementById('typ').value,
-                loc: document.getElementById('loc').value || "Nie podano",
-                desc: document.getElementById('desc').value || "Brak opisu",
-                foto: document.getElementById('foto').files.length > 0 ? "TAK" : "NIE"
+            if (!currentUser) {
+                alert("Błąd autoryzacji. Zaloguj się ponownie.");
+                return;
+            }
+
+            const typVal = document.getElementById('typ').value;
+            const locVal = document.getElementById('loc').value || "Nie podano";
+            const descVal = document.getElementById('desc').value || "Brak opisu";
+            const dataStr = new Date().toLocaleString('pl-PL');
+
+            const logData = {
+                data: dataStr,
+                typ: typVal,
+                loc: locVal,
+                desc: descVal,
+                foto: document.getElementById('foto').files.length > 0 ? "TAK" : "NIE",
+                uid: currentUser.uid
             };
-            db.ref('logi').push(data).then(() => {
-                alert("Zgłoszenie wysłane do tajnej bazy!");
-                window.location.href = 'services.html';
+
+            // 1. Zapisujemy log w bazie
+            db.ref('logi').push(logData).then(() => {
+                // 2. Pobieramy punkty użytkownika, dodajemy +25 pkt oraz zapisujemy historię
+                const userRef = db.ref('users_data/' + currentUser.uid);
+
+                userRef.once('value').then((snapshot) => {
+                    let punktyAktualne = 0;
+                    if (snapshot.exists() && snapshot.val().punkty) {
+                        punktyAktualne = snapshot.val().punkty;
+                    }
+
+                    const nowePunkty = punktyAktualne + 25;
+
+                    // Aktualizacja punktów w profilu
+                    userRef.update({ punkty: nowePunkty });
+
+                    // Dodanie wpisu do historii punktów
+                    const histRef = db.ref('users_data/' + currentUser.uid + '/historia');
+                    histRef.push({
+                        punkty: 25,
+                        tytul: "Donos: " + typVal,
+                        data: dataStr
+                    });
+
+                    alert("Zgłoszenie wysłane do tajnej bazy! Otrzymano +25 pkt.");
+                    window.location.href = 'services.html';
+                });
+            }).catch((error) => {
+                alert("Błąd wysyłania zgłoszenia: " + error.message);
             });
         }
     </script>
