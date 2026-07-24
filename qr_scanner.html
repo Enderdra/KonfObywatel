@@ -9,7 +9,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Skaner QR - KonfObywatel</title>
+    <title>Weryfikacja - KonfObywatel</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -26,13 +26,20 @@
         .header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 700; }
         .header-placeholder { min-width: 60px; }
 
-        main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; width: 100%; max-width: 500px; margin: 0 auto; }
         
-        #reader { width: 100%; max-width: 400px; border-radius: 12px; overflow: hidden; border: none !important; margin-bottom: 20px; }
+        .scanner-section { width: 100%; display: flex; flex-direction: column; gap: 15px; }
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; border: none !important; background: #000; }
         
-        .result-card { background: #fff; border-radius: 16px; padding: 20px; width: 100%; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: none; }
-        .result-header { font-size: 18px; font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-        .result-row { margin-bottom: 10px; font-size: 14px; }
+        .manual-box { background: #fff; padding: 20px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        .manual-box label { font-size: 12px; color: #666; font-weight: 600; text-transform: uppercase; }
+        .manual-input-row { display: flex; gap: 10px; }
+        .manual-box input { flex: 1; border: 1px solid #d1d1d6; border-radius: 10px; padding: 12px; font-size: 18px; font-weight: 700; text-align: center; letter-spacing: 2px; outline: none; }
+        .manual-box button { background: #0052cc; color: white; border: none; padding: 0 20px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+
+        .result-card { background: #fff; border-radius: 16px; padding: 20px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: none; }
+        .result-header { font-size: 18px; font-weight: 800; margin-bottom: 15px; }
+        .result-row { margin-bottom: 12px; font-size: 14px; }
         .result-label { color: #666; font-size: 11px; font-weight: 600; text-transform: uppercase; }
         .result-val { font-size: 16px; font-weight: 700; color: #1a1a1c; }
         
@@ -46,13 +53,27 @@
 
     <header>
         <a href="qr_menu.html" class="back-btn">‹ Wróć</a>
-        <div class="header-title">Skanuj i Potwierdź</div>
+        <div class="header-title">Weryfikator Danych</div>
         <div class="header-placeholder"></div>
     </header>
 
     <main>
-        <div id="reader"></div>
+        <!-- Sekcja skanera i wpisywania ręcznego -->
+        <div id="scanner-section" class="scanner-section">
+            <div id="reader"></div>
+            
+            <div style="text-align: center; font-size: 13px; color: #888; font-weight: 600; margin: 5px 0;">LUB WPISZ KOD RĘCZNIE</div>
 
+            <div class="manual-box">
+                <label>6-cyfrowy kod z aplikacji sprawdzanego</label>
+                <div class="manual-input-row">
+                    <input type="text" id="manual-code-input" maxlength="6" placeholder="000000">
+                    <button onclick="sprawdzKodRecznie()">Sprawdź</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wynik weryfikacji -->
         <div id="result-container" class="result-card">
             <div class="result-header">🔍 Wynik Weryfikacji Serwera</div>
             <div class="result-row">
@@ -74,7 +95,7 @@
             
             <div id="verification-status"></div>
             
-            <button class="btn-rescan" onclick="restartSkanera()">Skanuj kolejny kod</button>
+            <button class="btn-rescan" onclick="restartSkanera()">Sprawdź kolejną osobę</button>
         </div>
     </main>
 
@@ -97,28 +118,54 @@
             try {
                 const data = JSON.parse(decodedText);
                 if (data.uid && data.system === "KonfObywatel") {
-                    html5QrCode.stop().then(() => {
-                        sprawdzWServerze(data.uid);
-                    }).catch(err => {
-                        console.error("Błąd zatrzymania kamery", err);
-                    });
+                    if (html5QrCode) {
+                        html5QrCode.stop().catch(() => {});
+                    }
+                    pobierzDaneZServera(data.uid);
                 } else {
-                    alert("Nieznany lub niekompatybilny kod QR.");
+                    alert("Nieznany kod QR.");
                 }
             } catch (e) {
-                alert("Błąd odczytu struktury kodu QR.");
+                alert("Błąd struktury kodu QR.");
             }
         }
 
-        function sprawdzWServerze(uid) {
-            document.getElementById('reader').style.display = 'none';
+        // Sprawdzanie po wpisaniu 6-cyfrowego kodu ręcznie
+        function sprawdzKodRecznie() {
+            const kod = document.getElementById('manual-code-input').value.trim();
+            if (kod.length !== 6) {
+                alert("Kod musi składać się z 6 cyfr!");
+                return;
+            }
+
+            if (html5QrCode) {
+                html5QrCode.stop().catch(() => {});
+            }
+
+            // Zapytanie do bazy Firebase szukające użytkownika z tym kodem6
+            firebase.database().ref('users_data').orderByChild('kod6').equalTo(kod).once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        // Pobieramy pierwsze pasujące dziecko (UID)
+                        const uid = Object.keys(snapshot.val())[0];
+                        pobierzDaneZServera(uid);
+                    } else {
+                        pokażBrakWynikow();
+                    }
+                })
+                .catch((err) => {
+                    alert("Błąd połączenia z serwerem: " + err.message);
+                });
+        }
+
+        function pobierzDaneZServera(uid) {
+            document.getElementById('scanner-section').style.display = 'none';
             document.getElementById('result-container').style.display = 'block';
 
-            // Odpytanie centrali Firebase w celu potwierdzenia danych skanowanego obywatela
             firebase.database().ref('users_data/' + uid).once('value').then((snapshot) => {
                 const statusBox = document.getElementById('verification-status');
                 
-                if (snapshot.exists()) {
+                if (snapshot.exists() && snapshot.val().imie_nazwisko) {
                     const val = snapshot.val();
                     document.getElementById('res-pseudo').innerText = val.pseudonim || "-";
                     document.getElementById('res-imie').innerText = val.imie_nazwisko || "-";
@@ -127,19 +174,27 @@
                     
                     statusBox.innerHTML = '<div class="valid-box">✅ STATUS: Potwierdzone przez Centralę (Aktywny Konfident)</div>';
                 } else {
-                    document.getElementById('res-pseudo').innerText = "NIEZNANY";
-                    document.getElementById('res-imie').innerText = "Brak rekordu w bazie";
-                    document.getElementById('res-seria').innerText = "-";
-                    document.getElementById('res-pesel').innerText = "-";
-                    
-                    statusBox.innerHTML = '<div class="invalid-box">❌ OSTRZEŻENIE: Nie znaleziono użytkownika w bazie Firebase!</div>';
+                    pokażBrakWynikow();
                 }
             });
         }
 
+        function pokażBrakWynikow() {
+            document.getElementById('scanner-section').style.display = 'none';
+            document.getElementById('result-container').style.display = 'block';
+
+            document.getElementById('res-pseudo').innerText = "NIEZNANY";
+            document.getElementById('res-imie').innerText = "Brak danych w bazie";
+            document.getElementById('res-seria').innerText = "-";
+            document.getElementById('res-pesel').innerText = "-";
+            
+            document.getElementById('verification-status').innerHTML = '<div class="invalid-box">❌ OSTRZEŻENIE: Nie znaleziono użytkownika lub kod jest błędny!</div>';
+        }
+
         function restartSkanera() {
             document.getElementById('result-container').style.display = 'none';
-            document.getElementById('reader').style.display = 'block';
+            document.getElementById('scanner-section').style.display = 'flex';
+            document.getElementById('manual-code-input').value = '';
             uruchomSkaner();
         }
 
@@ -147,10 +202,10 @@
             html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start(
                 { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
+                { fps: 10, qrbox: { width: 220, height: 220 } },
                 onScanSuccess
             ).catch(err => {
-                alert("Nie udało się uruchomić aparatu. Sprawdź uprawnienia przeglądarki.");
+                console.warn("Aparat niedostępny lub brak uprawnień:", err);
             });
         }
 
