@@ -11,10 +11,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Edycja Danych - KonfObywatel</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Firebase SDK -->
+    
+    <!-- Firebase SDK (Wersja Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
@@ -82,15 +84,16 @@
     </main>
 
     <script>
-        // 1. SKONFIGURUJ FIREBASE!
+        // 1. ZINTEGROWANY SZYFR FIREBASE
         const firebaseConfig = {
-            apiKey: "TWOJE_API_KEY",
-            authDomain: "TWOJA_DOMENA",
-            databaseURL: "TWOJ_URL_BAZY",
-            projectId: "TWOJ_PROJECT_ID",
-            storageBucket: "TWOJ_BUCKET",
-            messagingSenderId: "TWOJ_SENDER_ID",
-            appId: "TWOJ_APP_ID"
+            apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I",
+            authDomain: "konfobywatel-331d6.firebaseapp.com",
+            databaseURL: "https://konfobywatel-331d6-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "konfobywatel-331d6",
+            storageBucket: "konfobywatel-331d6.firebasestorage.app",
+            messagingSenderId: "695478312817",
+            appId: "1:695478312817:web:41ef61675267dd936da0d0",
+            measurementId: "G-HE1H1FKJMR"
         };
         firebase.initializeApp(firebaseConfig);
 
@@ -102,6 +105,8 @@
                 userUID = user.uid;
                 ladowanieDanych(userUID);
             } else {
+                // Jeśli wyrzuca tu z powrotem, oznacza to, że sesja Firebase wygasła 
+                // lub logowanie na głównej stronie omija Firebase Auth
                 window.location.href = 'login.html';
             }
         });
@@ -109,7 +114,9 @@
         function ladowanieDanych(uid) {
             // Ładowanie zdjęcia z localStorage
             const savedPhoto = localStorage.getItem('profileImage');
-            if (savedPhoto) document.getElementById('edit-photo-preview').src = savedPhoto;
+            if (savedPhoto) {
+                document.getElementById('edit-photo-preview').src = savedPhoto;
+            }
 
             // Ładowanie danych tekstowych z Firebase
             firebase.database().ref('users_data/' + uid).once('value').then((snapshot) => {
@@ -125,7 +132,7 @@
             });
         }
 
-        // Obsługa wgrania nowego zdjęcia
+        // Obsługa wgrania nowego zdjęcia (zapis do localStorage)
         document.getElementById('edit-photo-input').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -133,15 +140,18 @@
                 reader.onload = function(event) {
                     const base64String = event.target.result;
                     document.getElementById('edit-photo-preview').src = base64String;
-                    localStorage.setItem('profileImage', base64String); // Zapis do localStorage
+                    localStorage.setItem('profileImage', base64String);
                 };
                 reader.readAsDataURL(file);
             }
         });
 
-        // Zapis danych do Firebase
+        // Zapis danych do Firebase (synchronizacja)
         function zapiszDane() {
-            if (!userUID) return;
+            if (!userUID) {
+                alert("Błąd: Nie wykryto autoryzacji Firebase. Zaloguj się ponownie.");
+                return;
+            }
 
             const userData = {
                 pseudonim: document.getElementById('inp-pseudo').value,
