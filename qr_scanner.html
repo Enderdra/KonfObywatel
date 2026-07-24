@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'enabled') {
+            document.documentElement.classList.add('dark-mode');
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Skaner QR - KonfObywatel</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: #f2f2f7; color: #1a1a1c; display: flex; flex-direction: column; height: 100vh; }
+        
+        header { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: #f2f2f7; border-bottom: 1px solid #e5e5ea; }
+        .back-btn { color: #0052cc; text-decoration: none; font-size: 17px; font-weight: 500; min-width: 60px; }
+        .header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 700; }
+        .header-placeholder { min-width: 60px; }
+
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
+        
+        #reader { width: 100%; max-width: 400px; border-radius: 12px; overflow: hidden; border: none !important; margin-bottom: 20px; }
+        
+        .result-card { background: #fff; border-radius: 16px; padding: 20px; width: 100%; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: none; }
+        .result-header { font-size: 18px; font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .result-row { margin-bottom: 10px; font-size: 14px; }
+        .result-label { color: #666; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .result-val { font-size: 16px; font-weight: 700; color: #1a1a1c; }
+        
+        .valid-box { background: #e6f4ea; color: #137333; padding: 12px; border-radius: 10px; text-align: center; font-weight: 700; margin-top: 15px; }
+        .invalid-box { background: #fce8e6; color: #c5221f; padding: 12px; border-radius: 10px; text-align: center; font-weight: 700; margin-top: 15px; }
+        
+        .btn-rescan { width: 100%; background: #0052cc; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; margin-top: 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="qr_menu.html" class="back-btn">‹ Wróć</a>
+        <div class="header-title">Skanuj i Potwierdź</div>
+        <div class="header-placeholder"></div>
+    </header>
+
+    <main>
+        <div id="reader"></div>
+
+        <div id="result-container" class="result-card">
+            <div class="result-header">🔍 Wynik Weryfikacji Serwera</div>
+            <div class="result-row">
+                <div class="result-label">Pseudonim</div>
+                <div id="res-pseudo" class="result-val">-</div>
+            </div>
+            <div class="result-row">
+                <div class="result-label">Imię i nazwisko</div>
+                <div id="res-imie" class="result-val">-</div>
+            </div>
+            <div class="result-row">
+                <div class="result-label">Seria i numer</div>
+                <div id="res-seria" class="result-val">-</div>
+            </div>
+            <div class="result-row">
+                <div class="result-label">PESEL</div>
+                <div id="res-pesel" class="result-val">-</div>
+            </div>
+            
+            <div id="verification-status"></div>
+            
+            <button class="btn-rescan" onclick="restartSkanera()">Skanuj kolejny kod</button>
+        </div>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBriNFQP3gShatXR4qciLb9QoZfWrKY70I",
+            authDomain: "konfobywatel-331d6.firebaseapp.com",
+            databaseURL: "https://konfobywatel-331d6-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "konfobywatel-331d6",
+            storageBucket: "konfobywatel-331d6.firebasestorage.app",
+            messagingSenderId: "695478312817",
+            appId: "1:695478312817:web:41ef61675267dd936da0d0",
+            measurementId: "G-HE1H1FKJMR"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        let html5QrCode;
+
+        function onScanSuccess(decodedText, decodedResult) {
+            try {
+                const data = JSON.parse(decodedText);
+                if (data.uid && data.system === "KonfObywatel") {
+                    html5QrCode.stop().then(() => {
+                        sprawdzWServerze(data.uid);
+                    }).catch(err => {
+                        console.error("Błąd zatrzymania kamery", err);
+                    });
+                } else {
+                    alert("Nieznany lub niekompatybilny kod QR.");
+                }
+            } catch (e) {
+                alert("Błąd odczytu struktury kodu QR.");
+            }
+        }
+
+        function sprawdzWServerze(uid) {
+            document.getElementById('reader').style.display = 'none';
+            document.getElementById('result-container').style.display = 'block';
+
+            // Odpytanie centrali Firebase w celu potwierdzenia danych skanowanego obywatela
+            firebase.database().ref('users_data/' + uid).once('value').then((snapshot) => {
+                const statusBox = document.getElementById('verification-status');
+                
+                if (snapshot.exists()) {
+                    const val = snapshot.val();
+                    document.getElementById('res-pseudo').innerText = val.pseudonim || "-";
+                    document.getElementById('res-imie').innerText = val.imie_nazwisko || "-";
+                    document.getElementById('res-seria').innerText = val.seria_numer || "-";
+                    document.getElementById('res-pesel').innerText = val.pesel || "-";
+                    
+                    statusBox.innerHTML = '<div class="valid-box">✅ STATUS: Potwierdzone przez Centralę (Aktywny Konfident)</div>';
+                } else {
+                    document.getElementById('res-pseudo').innerText = "NIEZNANY";
+                    document.getElementById('res-imie').innerText = "Brak rekordu w bazie";
+                    document.getElementById('res-seria').innerText = "-";
+                    document.getElementById('res-pesel').innerText = "-";
+                    
+                    statusBox.innerHTML = '<div class="invalid-box">❌ OSTRZEŻENIE: Nie znaleziono użytkownika w bazie Firebase!</div>';
+                }
+            });
+        }
+
+        function restartSkanera() {
+            document.getElementById('result-container').style.display = 'none';
+            document.getElementById('reader').style.display = 'block';
+            uruchomSkaner();
+        }
+
+        function uruchomSkaner() {
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                onScanSuccess
+            ).catch(err => {
+                alert("Nie udało się uruchomić aparatu. Sprawdź uprawnienia przeglądarki.");
+            });
+        }
+
+        window.onload = () => {
+            uruchomSkaner();
+        };
+    </script>
+</body>
+</html>
